@@ -1,0 +1,8 @@
+[
+  {"id":10,"name":"Flash Light","slug":"flash-light","count":4,"image":{"src":"","alt":""}},
+  {"id":11,"name":"Professional","slug":"professionalnf","count":2,"image":{"src":"","alt":""}},
+  {"id":12,"name":"Mini Light","slug":"mini-light","count":2,"image":{"src":"","alt":""}},
+  {"id":13,"name":"Solar Light","slug":"solar-light","count":2,"image":{"src":"","alt":""}},
+  {"id":14,"name":"Hurricane Light","slug":"hurricane-light","count":1,"image":{"src":"","alt":""}},
+  {"id":15,"name":"Lamp Light","slug":"lamp-light","count":1,"image":{"src":"","alt":""}}
+]

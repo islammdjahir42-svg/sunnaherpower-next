@@ -1,0 +1,230 @@
+[
+  {
+    "id": 101,
+    "name": "GSTAR CV-108 রিচার্জেবল টর্চ লাইট",
+    "slug": "gstar-cv-108-rechargeable-torch",
+    "description": "<p>GSTAR CV-108 হাই পাওয়ার রিচার্জেবল টর্চ লাইট। দীর্ঘস্থায়ী ব্যাটারি, আউটডোর ও জরুরি প্রয়োজনে পারফেক্ট।</p>",
+    "short_description": "<p>হাই পাওয়ার রিচার্জেবল টর্চ লাইট</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "369000",
+      "regular_price": "499000",
+      "sale_price": "369000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":1,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"GSTAR CV-108"}],
+    "categories": [{"id":10,"name":"Flash Light","slug":"flash-light"}]
+  },
+  {
+    "id": 102,
+    "name": "SUNSTAR Premium SS-108 Pro রিচার্জেবল টর্চ লাইট",
+    "slug": "sunstar-ss-108-pro-torch",
+    "description": "<p>SUNSTAR SS-108 PRO সিরিজের সবচেয়ে শক্তিশালী টর্চ লাইট। ৬০,০০০ mAh ব্যাটারি।</p>",
+    "short_description": "<p>৬০,০০০ mAh প্রিমিয়াম টর্চ লাইট</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "339000",
+      "regular_price": "499000",
+      "sale_price": "339000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":2,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"SUNSTAR SS-108 PRO"}],
+    "categories": [{"id":10,"name":"Flash Light","slug":"flash-light"}]
+  },
+  {
+    "id": 103,
+    "name": "HIKARI 1,20000 mAh রিচার্জেবল টর্চ লাইট",
+    "slug": "hikari-120000-mah-torch",
+    "description": "<p>HIKARI ১,২০০০০ mAh ক্যাপাসিটি সহ প্রিমিয়াম রিচার্জেবল টর্চ লাইট।</p>",
+    "short_description": "<p>১,২০০০০ mAh হাই ক্যাপাসিটি</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "299000",
+      "regular_price": "390000",
+      "sale_price": "299000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":3,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"HIKARI 120000"}],
+    "categories": [{"id":11,"name":"Professional","slug":"professionalnf"}]
+  },
+  {
+    "id": 104,
+    "name": "SUNSTAR SS-60 স্ট্যান্ডার্ড ৬০,০০০ mAh রিচার্জেবল টর্চ লাইট",
+    "slug": "sunstar-ss-60-torch",
+    "description": "<p>SUNSTAR SS-60 স্ট্যান্ডার্ড সিরিজ। ৬০,০০০ mAh ব্যাটারি সহ দীর্ঘস্থায়ী আলো।</p>",
+    "short_description": "<p>৬০,০০০ mAh স্ট্যান্ডার্ড টর্চ</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "339000",
+      "regular_price": "439000",
+      "sale_price": "339000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":4,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"SUNSTAR SS-60"}],
+    "categories": [{"id":10,"name":"Flash Light","slug":"flash-light"}]
+  },
+  {
+    "id": 105,
+    "name": "MONSTER Premium 1,12000 mAh রিচার্জেবল টর্চ লাইট",
+    "slug": "monster-premium-112000-mah-torch",
+    "description": "<p>MONSTER প্রিমিয়াম সিরিজ। ১,১২০০০ mAh আল্ট্রা হাই ক্যাপাসিটি।</p>",
+    "short_description": "<p>১,১২০০০ mAh আল্ট্রা পাওয়ার</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "549000",
+      "regular_price": "700000",
+      "sale_price": "549000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":5,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"MONSTER 112000"}],
+    "categories": [{"id":11,"name":"Professional","slug":"professionalnf"}]
+  },
+  {
+    "id": 106,
+    "name": "COBA 26650mAh রিচার্জেবল টর্চ লাইট",
+    "slug": "coba-26650-mah-torch",
+    "description": "<p>COBA ২৬৬৫০ mAh রিচার্জেবল টর্চ লাইট। হালকা ও সহজে বহনযোগ্য।</p>",
+    "short_description": "<p>২৬৬৫০ mAh কম্প্যাক্ট টর্চ</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "169000",
+      "regular_price": "190000",
+      "sale_price": "169000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":6,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"COBA 26650"}],
+    "categories": [{"id":12,"name":"Mini Light","slug":"mini-light"}]
+  },
+  {
+    "id": 107,
+    "name": "ONESUN Premium 72,000 mAh টর্চ লাইট",
+    "slug": "onesun-premium-72000-torch",
+    "description": "<p>ONESUN প্রিমিয়াম ৭২,০০০ mAh টর্চ লাইট। সোলার চার্জিং সাপোর্ট।</p>",
+    "short_description": "<p>৭২,০০০ mAh সোলার টর্চ</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "349000",
+      "regular_price": "420000",
+      "sale_price": "349000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":7,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"ONESUN 72000"}],
+    "categories": [{"id":13,"name":"Solar Light","slug":"solar-light"}]
+  },
+  {
+    "id": 108,
+    "name": "HIKARI 30,000 mAh রিচার্জেবল টর্চ লাইট",
+    "slug": "hikari-30000-mah-torch",
+    "description": "<p>HIKARI ৩০,০০০ mAh রিচার্জেবল টর্চ লাইট। দৈনন্দিন ব্যবহারের জন্য পারফেক্ট।</p>",
+    "short_description": "<p>৩০,০০০ mAh ডেইলি ইউজ টর্চ</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "179000",
+      "regular_price": "200000",
+      "sale_price": "179000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":8,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"HIKARI 30000"}],
+    "categories": [{"id":10,"name":"Flash Light","slug":"flash-light"}]
+  },
+  {
+    "id": 109,
+    "name": "SUNSTAR SS-36 মিনি রিচার্জেবল টর্চ লাইট",
+    "slug": "sunstar-ss-36-mini-torch",
+    "description": "<p>SUNSTAR SS-36 মিনি সিরিজ। পকেট সাইজ, শক্তিশালী আলো।</p>",
+    "short_description": "<p>পকেট সাইজ মিনি টর্চ</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "129000",
+      "regular_price": "150000",
+      "sale_price": "129000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":9,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"SUNSTAR SS-36"}],
+    "categories": [{"id":12,"name":"Mini Light","slug":"mini-light"}]
+  },
+  {
+    "id": 110,
+    "name": "GSTAR Hurricane রিচার্জেবল লাইট",
+    "slug": "gstar-hurricane-rechargeable-light",
+    "description": "<p>GSTAR হারিকেন রিচার্জেবল লাইট। ঘরে ও বাইরে ব্যবহারযোগ্য।</p>",
+    "short_description": "<p>রিচার্জেবল হারিকেন লাইট</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "149000",
+      "regular_price": "180000",
+      "sale_price": "149000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":10,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"GSTAR Hurricane"}],
+    "categories": [{"id":14,"name":"Hurricane Light","slug":"hurricane-light"}]
+  },
+  {
+    "id": 111,
+    "name": "SUNSTAR Solar Hurricane লাইট",
+    "slug": "sunstar-solar-hurricane-light",
+    "description": "<p>SUNSTAR সোলার হারিকেন লাইট। সোলার প্যানেল দিয়ে চার্জ হয়।</p>",
+    "short_description": "<p>সোলার চার্জড হারিকেন লাইট</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "199000",
+      "regular_price": "250000",
+      "sale_price": "199000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":11,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"SUNSTAR Solar Hurricane"}],
+    "categories": [{"id":13,"name":"Solar Light","slug":"solar-light"}]
+  },
+  {
+    "id": 112,
+    "name": "HIKARI LED Lamp Light রিচার্জেবল",
+    "slug": "hikari-led-lamp-light",
+    "description": "<p>HIKARI LED ল্যাম্প লাইট। ৩৬০ ডিগ্রি আলো, টেবিল ল্যাম্প হিসেবে ব্যবহার করা যায়।</p>",
+    "short_description": "<p>৩৬০° LED ল্যাম্প লাইট</p>",
+    "on_sale": true,
+    "is_in_stock": true,
+    "is_purchasable": true,
+    "prices": {
+      "price": "139000",
+      "regular_price": "170000",
+      "sale_price": "139000",
+      "currency_minor_unit": 2,
+      "currency_symbol": "৳"
+    },
+    "images": [{"id":12,"src":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","thumbnail":"https://sunnahersopan.com/wp-content/uploads/2026/07/PNG-31.png","alt":"HIKARI Lamp"}],
+    "categories": [{"id":15,"name":"Lamp Light","slug":"lamp-light"}]
+  }
+]

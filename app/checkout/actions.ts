@@ -6,7 +6,7 @@ import { findDistrict, findThana, DISTRICTS } from "@/lib/bd-geo";
 import { capitalize, checkPhone, formatPhone, splitName, toEnglish } from "@/lib/bn-format";
 
 export type CheckoutState =
-  | { ok: true; id: number; key: string }
+  | { ok: true; id: number; key: string; am?: Record<string, string> }
   | { ok: false; error: string; fields?: Record<string, string> }
   | { ok: false; error: "gift_invalid"; gift_ids: number[] }
   | null;
@@ -19,48 +19,69 @@ function addressToEnglish(bn: string): string {
 }
 
 function sha256(str: string): string {
-  return createHash('sha256').update(str.toLowerCase().trim()).digest('hex');
+  return createHash('sha256').update(str).digest('hex');
 }
 
-async function fireFacebookCAPIPurchase(orderId: number, total: number, items: {product_id: number, quantity: number}[], billing: Record<string, string>, siteUrl: string, pixelId: string, accessToken: string, fbc?: string, fbp?: string, user_agent?: string, pageUrl?: string, client_ip?: string) {
+// Meta-র নিয়মে normalize করে hash করা কাস্টমারের তথ্য।
+// সার্ভার (CAPI) আর ব্রাউজার (pixel init) দুই জায়গাতেই হুবহু এই মানগুলো যায়, যাতে মিলে যায়।
+function hashedUserData(billing: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  const put = (k: string, v: string) => { if (v) out[k] = sha256(v); };
+  put("ph", billing.phone.replace(/\D/g, ""));                                  // 8801XXXXXXXXX
+  put("fn", billing.first_name.toLowerCase().trim());
+  put("ln", billing.last_name.toLowerCase().trim());
+  put("ct", billing.city.toLowerCase().replace(/[^a-z]/g, ""));                 // জেলা, যেমন coxsbazar
+  put("zp", billing.postcode.toLowerCase().replace(/\s/g, ""));
+  put("country", "bd");
+  return out;
+}
+
+// সার্ভারের Purchase কখন test হিসেবে যাবে: শুধু Preview/লোকালে। লাইভ সাইটে কখনো না,
+// কারণ test_event_code থাকলে ইভেন্ট আসল রিপোর্ট আর এড অপটিমাইজেশনে যায় না।
+const TEST_EVENT_CODE = process.env.VERCEL_ENV === "production" ? undefined : process.env.FB_TEST_EVENT_CODE || undefined;
+
+async function fireFacebookCAPIPurchase(
+  orderId: number, total: number, items: { product_id: number; quantity: number; gift_price?: number }[],
+  am: Record<string, string>, siteUrl: string, pixelId: string, accessToken: string,
+  extra: { fbc?: string; fbp?: string; user_agent?: string; client_ip?: string; external_id?: string },
+) {
   try {
-    const eventTime = Math.floor(Date.now() / 1000);
+    const user_data: Record<string, unknown> = Object.fromEntries(Object.entries(am).map(([k, v]) => [k, [v]]));
+    if (extra.external_id) user_data.external_id = [extra.external_id];
+    if (extra.fbc) user_data.fbc = extra.fbc;
+    if (extra.fbp) user_data.fbp = extra.fbp;
+    if (extra.user_agent) user_data.client_user_agent = extra.user_agent;
+    if (extra.client_ip) user_data.client_ip_address = extra.client_ip;
+
     const payload = {
       data: [{
-        event_name: 'Purchase',
-        event_time: eventTime,
-        event_id: `purchase_${orderId}`,
+        event_name: "Purchase",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: `purchase_${orderId}`, // ব্রাউজারের Purchase-এও হুবহু এই eventID যায় → ডুপ্লিকেট বাদ
         event_source_url: `${siteUrl}/checkout/order-received/${orderId}`,
-        action_source: 'website',
-        user_data: {
-          ph: [sha256(billing.phone.replace(/[^0-9]/g, ''))],
-          fn: [sha256(billing.first_name)],
-          ln: [sha256(billing.last_name)],
-          ct: [sha256(billing.city)],
-          country: [sha256('bd')],
-          ...(fbc ? { fbc } : {}),
-          ...(fbp ? { fbp } : {}),
-          ...(user_agent ? { client_user_agent: user_agent } : {}),
-          ...(client_ip ? { client_ip_address: client_ip } : {}),
-        },
+        action_source: "website",
+        user_data,
         custom_data: {
           value: total,
-          currency: 'BDT',
-          content_ids: items.map(i => String(i.product_id)),
-          content_type: 'product',
+          currency: "BDT",
+          content_ids: items.map((i) => String(i.product_id)),
+          content_type: "product",
           order_id: String(orderId),
-          contents: items.map(i => ({ id: String(i.product_id), quantity: i.quantity, item_price: (i as any).gift_price !== undefined ? (i as any).gift_price : undefined })),
+          num_items: items.reduce((n, i) => n + i.quantity, 0),
+          contents: items.map((i) => ({ id: String(i.product_id), quantity: i.quantity, ...(i.gift_price !== undefined ? { item_price: i.gift_price } : {}) })),
         },
       }],
-      test_event_code: process.env.FB_TEST_EVENT_CODE || undefined,
+      ...(TEST_EVENT_CODE ? { test_event_code: TEST_EVENT_CODE } : {}),
     };
-    await fetch(`https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch(`https://graph.facebook.com/v23.0/${pixelId}/events?access_token=${accessToken}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      cache: "no-store",
     });
+    if (!res.ok) console.error("[Facebook CAPI Purchase]", res.status, await res.text());
   } catch (e) {
-    console.error('[Facebook CAPI Purchase]', e);
+    console.error("[Facebook CAPI Purchase]", e);
   }
 }
 
@@ -82,6 +103,7 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
   const fbp = String(form.get("fbp") || "").trim();
   const user_agent = String(form.get("user_agent") || "").trim();
   const page_url = String(form.get("page_url") || "").trim();
+  const external_id = String(form.get("external_id") || "").trim().slice(0, 100);
   const referrerHost = referrer ? (() => { try { return new URL(referrer).hostname; } catch { return referrer; } })() : "(direct)";
 
   let items: { product_id: number; quantity: number; gift_price?: number }[] = [];
@@ -113,9 +135,11 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
     country: "BD",
   };
 
+  const am = hashedUserData(billing);
+
   if (process.env.ORDER_MODE !== "live") {
     console.log("[checkout demo]", { billing, items });
-    return { ok: true, id: 0, key: "demo" };
+    return { ok: true, id: 0, key: "demo", am };
   }
 
   const WP_URL = (process.env.WP_URL || "https://wp.sunnahertorch.com").replace(/\/$/, "");
@@ -193,16 +217,19 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
       return { ok: false, error: data.error || "অর্ডার নেওয়া যায়নি।" };
     }
 
-    // Server-side ServerTrack Purchase event
+    // সার্ভার থেকে Facebook Purchase (Conversions API)
     const total = data.total ? Number(data.total) : 0;
-    const PIXEL_ID = process.env.FB_PIXEL_ID || '1456582026311543';
-    const ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN || '';
-    const SITE_URL = (process.env.WP_URL || 'https://wp.sunnahertorch.com').replace('wp.', 'www.').replace('/wp-admin', '');
+    // ব্রাউজারের পিক্সেল যে আইডি ব্যবহার করে, সার্ভারেও সেটাই (আগে ভুল করে অন্য সাইটের পিক্সেল ডিফল্ট ছিল)
+    const PIXEL_ID = process.env.FB_PIXEL_ID || process.env.NEXT_PUBLIC_FB_PIXEL_ID || "2116851162527598";
+    const ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN || "";
+    // কাস্টমার যে ডোমেইন থেকে অর্ডার দিয়েছে সেটাই; না পেলে WP_URL থেকে আন্দাজ
+    let SITE_URL = WP_URL.replace("://wp.", "://www.");
+    try { if (page_url) SITE_URL = new URL(page_url).origin; } catch {}
     if (ACCESS_TOKEN) {
-      await fireFacebookCAPIPurchase(data.id, total, items, billing, SITE_URL, PIXEL_ID, ACCESS_TOKEN, fbc, fbp, user_agent, page_url, client_ip);
+      await fireFacebookCAPIPurchase(data.id, total, items, am, SITE_URL, PIXEL_ID, ACCESS_TOKEN, { fbc, fbp, user_agent, client_ip, external_id });
     }
 
-    return { ok: true, id: data.id, key: data.order_key };
+    return { ok: true, id: data.id, key: data.order_key, am };
   } catch (err) {
     console.error(err);
     return { ok: false, error: "অর্ডার নেওয়া যায়নি। একটু পরে আবার চেষ্টা করুন অথবা 01707638902 নম্বরে কল করুন।" };

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { PIXEL_ID, matchingData } from "@/lib/fb";
 
 declare global {
   interface Window {
@@ -8,8 +9,6 @@ declare global {
     _fbq?: unknown;
   }
 }
-
-const PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || "2116851162527598";
 
 function loadPixel() {
   if (typeof window === "undefined" || window.fbq != null) return;
@@ -26,7 +25,8 @@ function loadPixel() {
   s.async = true;
   s.src = "https://connect.facebook.net/en_US/fbevents.js";
   document.head.appendChild(s);
-  window.fbq?.("init", PIXEL_ID);
+  // Advanced Matching init-এর সময়েই দিতে হয় (track-এর ৪র্থ আর্গুমেন্টে দিলে Facebook উপেক্ষা করে)
+  window.fbq?.("init", PIXEL_ID, matchingData());
 }
 
 export default function FacebookPixel() {

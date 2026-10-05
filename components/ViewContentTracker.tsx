@@ -12,6 +12,7 @@ export default function ViewContentTracker({ id, name, price }: { id: number; na
         content_ids: [String(id)],
         content_name: name,
         content_type: 'product',
+        contents: [{ id: String(id), quantity: 1, item_price: price }],
         value: price,
         currency: 'BDT',
       });

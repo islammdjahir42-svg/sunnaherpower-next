@@ -31,6 +31,8 @@ export default function AddToCartButton({ product, disabled, compact, qty = 1 }:
         content_ids: [String(product.id)],
         content_name: product.name,
         content_type: 'product',
+        contents: [{ id: String(product.id), quantity: qty, item_price: product.price }],
+        num_items: qty,
         value: product.price * qty,
         currency: 'BDT',
       });

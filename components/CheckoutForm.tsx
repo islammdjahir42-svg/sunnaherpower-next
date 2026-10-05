@@ -9,12 +9,7 @@ import { useCart, cartTotal } from "@/lib/cart";
 import { taka } from "@/lib/format";
 import { DISTRICTS, findDistrict, findThana } from "@/lib/bd-geo";
 import { checkPhone, localPhoneDigits } from "@/lib/bn-format";
-
-function getCookie(name: string): string {
-  if (typeof document === 'undefined') return '';
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : '';
-}
+import { getCookie, getExternalId, saveUserData } from "@/lib/fb";
 
 export default function CheckoutForm() {
   const { items, setQty, remove, clear } = useCart();
@@ -43,34 +38,38 @@ export default function CheckoutForm() {
     setReferrer(document.referrer || "");
   }, []);
 
+  // InitiateCheckout — কার্টের পণ্য, পরিমাণ আর দামসহ (আগে কোনো তথ্য ছাড়া যেত)
+  // কার্ট localStorage থেকে আসে, তাই প্রথম রেন্ডারেই পণ্যগুলো পাওয়া যায়; ইভেন্ট একবারই যাবে।
+  const icSent = useRef(false);
   useEffect(() => {
+    if (icSent.current || !items.length) return;
+    icSent.current = true;
+    const params = {
+      value: cartTotal(items),
+      currency: 'BDT',
+      content_ids: items.map(i => String(i.id)),
+      content_type: 'product',
+      contents: items.map(i => ({ id: String(i.id), quantity: i.qty, item_price: i.price })),
+      num_items: items.reduce((n, i) => n + i.qty, 0),
+    };
     try {
       if (window.fbq) {
-        window.fbq('track', 'InitiateCheckout');
+        window.fbq('track', 'InitiateCheckout', params);
       } else {
         let _a = 0;
         const _iv = setInterval(() => {
           _a++;
-          if (window.fbq || _a > 100) { clearInterval(_iv); window.fbq?.('track', 'InitiateCheckout'); }
+          if (window.fbq || _a > 100) { clearInterval(_iv); window.fbq?.('track', 'InitiateCheckout', params); }
         }, 50);
       }
     } catch {}
-  }, []);
+  }, [items]);
 
   useEffect(() => {
     if (state?.ok) {
       deleteIncomplete();
-      // ServerTrack Purchase event
-      try {
-        const total = items.reduce((s, i) => s + i.price * i.qty, 0);
-        (window as any).st?.('track', 'Purchase', {
-          value: total,
-          currency: 'BDT',
-          content_ids: items.map(i => String(i.id)),
-          content_type: 'product',
-          order_id: String(state.id),
-        });
-      } catch {}
+      // কাস্টমারের hash করা তথ্য রেখে দেওয়া — পরের পেজে (অর্ডার সম্পন্ন) আর পরের ভিজিটে পিক্সেল init-এ যাবে
+      saveUserData(state.am);
       clear();
       setTimeout(() => {
         window.location.href = `/checkout/order-received/${state.id}?key=${state.key}`;
@@ -162,6 +161,13 @@ export default function CheckoutForm() {
       }
       localStorage.setItem(key, String(Date.now()));
     } catch {}
+    // Facebook cookie আর ভিজিটর আইডি জমা দেওয়ার ঠিক আগে নতুন করে পড়া
+    // (পেজ খোলার সময় পিক্সেল লোড না হলে _fbp তখনও তৈরি হয়নি থাকতে পারে)
+    const f = e.currentTarget.elements;
+    const setVal = (n: string, v: string) => { const el = f.namedItem(n) as HTMLInputElement | null; if (el) el.value = v; };
+    setVal("fbc", getCookie("_fbc"));
+    setVal("fbp", getCookie("_fbp"));
+    setVal("external_id", getExternalId());
     setSubmitted(true);
   };
 
@@ -182,8 +188,9 @@ export default function CheckoutForm() {
   return (
     <form action={action} onSubmit={handleSubmit} className="grid items-start gap-8 md:grid-cols-2 md:gap-6">
       <input type="hidden" name="items" value={payload} />
-      <input type="hidden" name="fbc" value={typeof document !== 'undefined' ? getCookie('_fbc') : ''} />
-      <input type="hidden" name="fbp" value={typeof document !== 'undefined' ? getCookie('_fbp') : ''} />
+      <input type="hidden" name="fbc" defaultValue={getCookie('_fbc')} />
+      <input type="hidden" name="fbp" defaultValue={getCookie('_fbp')} />
+      <input type="hidden" name="external_id" defaultValue="" />
       <input type="hidden" name="user_agent" value={typeof navigator !== 'undefined' ? navigator.userAgent : ''} />
       <input type="hidden" name="page_url" value={typeof window !== 'undefined' ? window.location.href : ''} />
       <input type="hidden" name="utm_source" value={utmSource} />

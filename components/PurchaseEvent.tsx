@@ -9,7 +9,7 @@ type Props = {
 };
 
 declare global {
-  interface Window { 
+  interface Window {
     dataLayer?: Record<string, unknown>[];
     fbq?: (...args: unknown[]) => void;
     _fbq?: unknown;
@@ -22,6 +22,8 @@ export default function PurchaseEvent({ orderId, value, items, user }: Props) {
     try { if (localStorage.getItem(flag)) return; } catch {}
 
     // Facebook Pixel Purchase
+    // কাস্টমারের তথ্য (ফোন, নাম, জেলা) পিক্সেল init-এই চলে গেছে (অর্ডারের সময় সেভ করা hash থেকে)।
+    // eventID সার্ভারের CAPI Purchase-এর সাথে হুবহু এক, তাই Facebook একটাকে ডুপ্লিকেট হিসেবে বাদ দেবে।
     try {
       window.fbq?.('track', 'Purchase', {
         value,
@@ -29,17 +31,10 @@ export default function PurchaseEvent({ orderId, value, items, user }: Props) {
         content_ids: items.map(i => i.item_id),
         content_name: items.map(i => i.item_name).join(', '),
         content_type: 'product',
-        transaction_id: String(orderId),
+        num_items: items.reduce((n, i) => n + i.quantity, 0),
+        order_id: String(orderId),
         contents: items.map(i => ({ id: i.item_id, quantity: i.quantity, item_price: i.price })),
-      }, {
-        em: undefined,
-        fn: user.first_name,
-        ln: user.last_name,
-        ph: user.phone,
-        ct: user.city,
-        zp: user.postcode,
-        country: 'bd',
-      });
+      }, { eventID: `purchase_${orderId}` });
     } catch {}
 
     // GTM dataLayer

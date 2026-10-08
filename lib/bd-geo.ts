@@ -89,3 +89,26 @@ export function findDistrict(en: string): District | undefined {
 export function findThana(district: District | undefined, en: string): Thana | undefined {
   return district?.thanas.find((t) => t.en === en);
 }
+
+// জেলা → বিভাগ (Facebook-এর "st" প্যারামিটারের জন্য)।
+// বানান Facebook-এর লোকেশন তালিকার মতো পুরোনো ইংরেজি নামে (chittagong, barisal),
+// কারণ Facebook প্রোফাইলের বিভাগ ওই নামে থাকে।
+const DIVISION_DISTRICTS: Record<string, string[]> = {
+  dhaka: ["Dhaka", "Gazipur", "Narayanganj", "Munshiganj", "Manikganj", "Narsingdi", "Kishoreganj", "Tangail", "Faridpur", "Gopalganj", "Madaripur", "Rajbari", "Shariatpur"],
+  chittagong: ["Chattogram", "Cox's Bazar", "Cumilla", "Brahmanbaria", "Chandpur", "Feni", "Lakshmipur", "Noakhali", "Khagrachhari", "Rangamati", "Bandarban"],
+  rajshahi: ["Rajshahi", "Bogura", "Chapai Nawabganj", "Naogaon", "Natore", "Pabna", "Sirajganj", "Joypurhat"],
+  khulna: ["Khulna", "Bagerhat", "Satkhira", "Jashore", "Jhenaidah", "Magura", "Narail", "Kushtia", "Chuadanga", "Meherpur"],
+  barisal: ["Barishal", "Barguna", "Bhola", "Jhalokati", "Patuakhali", "Pirojpur"],
+  sylhet: ["Sylhet", "Habiganj", "Moulvibazar", "Sunamganj"],
+  rangpur: ["Rangpur", "Dinajpur", "Gaibandha", "Kurigram", "Lalmonirhat", "Nilphamari", "Panchagarh", "Thakurgaon"],
+  mymensingh: ["Mymensingh", "Jamalpur", "Netrokona", "Sherpur"],
+};
+
+const DIVISION_OF: Record<string, string> = Object.fromEntries(
+  Object.entries(DIVISION_DISTRICTS).flatMap(([div, ds]) => ds.map((d) => [d, div])),
+);
+
+// জেলার ইংরেজি নাম থেকে বিভাগ, যেমন "Gazipur" → "dhaka"। না পেলে খালি।
+export function divisionOf(districtEn: string): string {
+  return DIVISION_OF[districtEn] || "";
+}

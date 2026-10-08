@@ -2,7 +2,7 @@
 import { headers } from "next/headers";
 import { createHash } from "crypto";
 import { getOrder } from "@/lib/woo";
-import { findDistrict, findThana, DISTRICTS } from "@/lib/bd-geo";
+import { findDistrict, findThana, divisionOf, DISTRICTS } from "@/lib/bd-geo";
 import { capitalize, checkPhone, formatPhone, splitName, toEnglish } from "@/lib/bn-format";
 
 export type CheckoutState =
@@ -32,6 +32,7 @@ function hashedUserData(billing: Record<string, string>, email = ""): Record<str
   put("fn", billing.first_name.toLowerCase().trim());
   put("ln", billing.last_name.toLowerCase().trim());
   put("ct", billing.city.toLowerCase().replace(/[^a-z]/g, ""));                 // জেলা, যেমন coxsbazar
+  put("st", divisionOf(billing.city));                                          // বিভাগ, যেমন dhaka, chittagong
   put("zp", billing.postcode.toLowerCase().replace(/\s/g, ""));
   put("country", "bd");
   return out;

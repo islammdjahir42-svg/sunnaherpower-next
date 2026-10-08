@@ -54,6 +54,7 @@ export default async function ProductPage({ params }: Props) {
         <OrderRow
           product={{ id: p.id, slug: p.slug, name, image: images[0]?.thumbnail, price }}
           disabled={!p.is_in_stock || !p.is_purchasable}
+          category={category ? decode(category.name) : undefined}
           animated={true}
         />
       </div>
@@ -72,6 +73,7 @@ export default async function ProductPage({ params }: Props) {
           <OrderRow
             product={{ id: p.id, slug: p.slug, name, image: images[0]?.thumbnail, price }}
             disabled={!p.is_in_stock || !p.is_purchasable}
+            category={category ? decode(category.name) : undefined}
             showQty={true}
             animated={true}
           />

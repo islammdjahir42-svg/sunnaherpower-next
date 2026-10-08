@@ -5,10 +5,11 @@ import { useCart } from "@/lib/cart";
 import type { CartItem } from "@/lib/types";
 import { CartIcon } from "./Icons";
 import { flyToCart } from "@/lib/flyToCart";
+import { trackAddToCart } from "@/lib/fb";
 
-type Props = { product: Omit<CartItem, "qty">; disabled?: boolean; showQty?: boolean; animated?: boolean };
+type Props = { product: Omit<CartItem, "qty">; disabled?: boolean; showQty?: boolean; animated?: boolean; category?: string };
 
-export default function OrderRow({ product, disabled, showQty = false, animated = false }: Props) {
+export default function OrderRow({ product, disabled, showQty = false, animated = false, category }: Props) {
   const add = useCart((s) => s.add);
   const router = useRouter();
   const [qty, setQty] = useState(1);
@@ -30,17 +31,7 @@ export default function OrderRow({ product, disabled, showQty = false, animated 
         onClick={async (e) => {
           await flyToCart(e.currentTarget, product.image);
           add(product, qty);
-          try {
-            (window as any).fbq?.('track', 'AddToCart', {
-              content_ids: [String(product.id)],
-              content_name: product.name,
-              content_type: 'product',
-              contents: [{ id: String(product.id), quantity: qty, item_price: product.price }],
-              num_items: qty,
-              value: product.price * qty,
-              currency: 'BDT',
-            });
-          } catch {}
+          trackAddToCart({ id: product.id, name: product.name, price: product.price, category }, qty);
           window.location.href = "/checkout";
         }}
         className={`inline-flex h-10 items-center gap-2 rounded-md px-8 text-sm font-semibold text-white hover:opacity-90 ${animated ? "btn-animated" : "bg-accent hover:bg-accent-dark"}`}

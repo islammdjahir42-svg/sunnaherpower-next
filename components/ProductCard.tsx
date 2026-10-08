@@ -8,6 +8,7 @@ export default function ProductCard({ p }: { p: Product }) {
   const { price, regular, discount } = priceInfo(p.prices);
   const img = p.images[0];
   const name = decode(p.name);
+  const category = p.categories?.find((c) => c.slug !== "uncategorized" && c.slug !== "all-products");
 
   return (
     <article className="flex flex-col border-r border-b border-line p-2 sm:p-3">
@@ -38,6 +39,7 @@ export default function ProductCard({ p }: { p: Product }) {
         <AddToCartButton
           product={{ id: p.id, slug: p.slug, name, image: img?.thumbnail, price }}
           disabled={!p.is_in_stock || !p.is_purchasable}
+          category={category ? decode(category.name) : undefined}
           compact
         />
       </div>

@@ -4,19 +4,17 @@ import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import type { CartItem } from "@/lib/types";
 import { flyToCart } from "@/lib/flyToCart";
-
-declare global {
-  interface Window { fbq?: (...args: unknown[]) => void; }
-}
+import { trackAddToCart } from "@/lib/fb";
 
 type Props = {
   product: Omit<CartItem, "qty">;
   disabled?: boolean;
   compact?: boolean;
   qty?: number;
+  category?: string; // Facebook-এর content_category
 };
 
-export default function AddToCartButton({ product, disabled, compact, qty = 1 }: Props) {
+export default function AddToCartButton({ product, disabled, compact, qty = 1, category }: Props) {
   const add = useCart((s) => s.add);
   const router = useRouter();
   const [added, setAdded] = useState(false);
@@ -25,24 +23,14 @@ export default function AddToCartButton({ product, disabled, compact, qty = 1 }:
     return <span className="w-full rounded-md bg-black/5 py-3 text-center text-sm text-muted">স্টকে নেই</span>;
   }
 
-  function trackAddToCart() {
-    try {
-      window.fbq?.('track', 'AddToCart', {
-        content_ids: [String(product.id)],
-        content_name: product.name,
-        content_type: 'product',
-        contents: [{ id: String(product.id), quantity: qty, item_price: product.price }],
-        num_items: qty,
-        value: product.price * qty,
-        currency: 'BDT',
-      });
-    } catch {}
+  function track() {
+    trackAddToCart({ id: product.id, name: product.name, price: product.price, category }, qty);
   }
 
   async function addOnly(e: React.MouseEvent<HTMLButtonElement>) {
     await flyToCart(e.currentTarget, product.image);
     add(product, qty);
-    trackAddToCart();
+    track();
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   }
@@ -50,7 +38,7 @@ export default function AddToCartButton({ product, disabled, compact, qty = 1 }:
   async function orderNow(e: React.MouseEvent<HTMLButtonElement>) {
     await flyToCart(e.currentTarget, product.image);
     add(product, qty);
-    trackAddToCart();
+    track();
     window.location.href = "/checkout";
   }
 

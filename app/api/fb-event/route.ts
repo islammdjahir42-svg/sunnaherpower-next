@@ -6,7 +6,7 @@ import { decode, priceInfo } from "@/lib/format";
 // ব্রাউজারের পিক্সেল আর এই সার্ভার ইভেন্টে একই event_id থাকে, তাই Facebook একটাকে ডুপ্লিকেট ধরে বাদ দেয়।
 // প্রোডাক্টের নাম, দাম, ক্যাটাগরি ব্রাউজার থেকে বিশ্বাস করা হয় না, WooCommerce থেকে নতুন করে নেওয়া হয়।
 
-const ALLOWED_EVENTS = new Set(["ViewContent"]);
+const ALLOWED_EVENTS = new Set(["ViewContent", "AddToCart"]);
 const HASH_KEYS = new Set(["em", "ph", "fn", "ln", "ct", "st", "zp", "country"]);
 const HEX64 = /^[0-9a-f]{64}$/;
 const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|meta-externalagent|headless|lighthouse|preview|python|curl|wget/i;
@@ -19,6 +19,7 @@ type Body = {
   event_id?: unknown;
   event_source_url?: unknown;
   product_id?: unknown;
+  quantity?: unknown;
   fbp?: unknown;
   fbc?: unknown;
   external_id?: unknown;
@@ -78,14 +79,18 @@ export async function POST(req: Request) {
   const { price } = priceInfo(product.prices);
   const category = product.categories?.find((c) => c.slug !== "uncategorized" && c.slug !== "all-products");
 
+  // ViewContent-এ সব সময় ১টা; AddToCart-এ ব্রাউজারের পরিমাণ, ১–৫০-এর মধ্যে
+  const quantity = event_name === "AddToCart" ? Math.max(1, Math.min(50, Math.trunc(Number(body.quantity)) || 1)) : 1;
+
   const custom_data: Record<string, unknown> = {
     content_ids: [String(product.id)],
     content_name: decode(product.name),
     content_type: "product",
-    contents: [{ id: String(product.id), quantity: 1, item_price: price }],
-    value: price,
+    contents: [{ id: String(product.id), quantity, item_price: price }],
+    value: price * quantity,
     currency: "BDT",
   };
+  if (event_name === "AddToCart") custom_data.num_items = quantity;
   if (category) custom_data.content_category = decode(category.name);
 
   const payload = {

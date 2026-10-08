@@ -100,16 +100,26 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // পিক্সেল লোড হয়ে _fbp কুকি তৈরি হওয়া পর্যন্ত একটু অপেক্ষা (সর্বোচ্চ ~৩ সেকেন্ড),
 // তারপর সার্ভারে পাঠানো। পিক্সেল ব্লক থাকলেও শেষে পাঠানো হয়, তখন fbp ছাড়া।
-export async function sendServerEvent(eventName: string, eventId: string, data: { product_id: number }) {
+// waitForFbp: false দিলে সাথে সাথে পাঠায় — ক্লিকের পরেই পেজ বদলালে (যেমন "অর্ডার করুন") দরকার,
+// কারণ অপেক্ষার মধ্যে পেজ চলে গেলে অনুরোধটাই আর যায় না। keepalive থাকায় শুরু হওয়া অনুরোধ পেজ বদলালেও শেষ হয়।
+export async function sendServerEvent(
+  eventName: string,
+  eventId: string,
+  data: { product_id: number; quantity?: number },
+  opts: { waitForFbp?: boolean } = {},
+) {
   if (typeof window === "undefined") return;
   try {
     rememberFbclid();
-    for (let i = 0; i < 12 && !getCookie("_fbp"); i++) await sleep(250);
+    if (opts.waitForFbp !== false) {
+      for (let i = 0; i < 12 && !getCookie("_fbp"); i++) await sleep(250);
+    }
     const body = JSON.stringify({
       event_name: eventName,
       event_id: eventId,
       event_source_url: window.location.href,
       product_id: data.product_id,
+      quantity: data.quantity,
       fbp: getCookie("_fbp"),
       fbc: getFbc(),
       external_id: getExternalId(),
@@ -117,4 +127,29 @@ export async function sendServerEvent(eventName: string, eventId: string, data: 
     });
     await fetch("/api/fb-event", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true });
   } catch {}
+}
+
+// ---------- AddToCart ----------
+// সব "কার্টে যোগ" / "অর্ডার করুন" বাটন এই একটা ফাংশন ব্যবহার করে, যাতে সব জায়গায় একই তথ্য যায়।
+// ব্রাউজারের পিক্সেল আর সার্ভার দুই জায়গায় একই event_id।
+export type TrackProduct = { id: number; name: string; price: number; category?: string };
+
+export function trackAddToCart(product: TrackProduct, qty: number) {
+  if (typeof window === "undefined") return;
+  const quantity = Math.max(1, Math.min(50, Math.trunc(qty) || 1));
+  const eventId = newEventId(`atc_${product.id}`);
+  try {
+    window.fbq?.("track", "AddToCart", {
+      content_ids: [String(product.id)],
+      content_name: product.name,
+      content_type: "product",
+      contents: [{ id: String(product.id), quantity, item_price: product.price }],
+      num_items: quantity,
+      value: product.price * quantity,
+      currency: "BDT",
+      ...(product.category ? { content_category: product.category } : {}),
+    }, { eventID: eventId });
+  } catch {}
+  // ক্লিকের পরেই অনেক সময় চেকআউটে চলে যায়, তাই অপেক্ষা ছাড়া সাথে সাথে পাঠানো
+  void sendServerEvent("AddToCart", eventId, { product_id: product.id, quantity }, { waitForFbp: false });
 }

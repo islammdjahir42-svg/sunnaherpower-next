@@ -24,9 +24,10 @@ function sha256(str: string): string {
 
 // Meta-র নিয়মে normalize করে hash করা কাস্টমারের তথ্য।
 // সার্ভার (CAPI) আর ব্রাউজার (pixel init) দুই জায়গাতেই হুবহু এই মানগুলো যায়, যাতে মিলে যায়।
-function hashedUserData(billing: Record<string, string>): Record<string, string> {
+function hashedUserData(billing: Record<string, string>, email = ""): Record<string, string> {
   const out: Record<string, string> = {};
   const put = (k: string, v: string) => { if (v) out[k] = sha256(v); };
+  put("em", email.trim().toLowerCase());                                        // কাস্টমার ইমেইল দিলে
   put("ph", billing.phone.replace(/\D/g, ""));                                  // 8801XXXXXXXXX
   put("fn", billing.first_name.toLowerCase().trim());
   put("ln", billing.last_name.toLowerCase().trim());
@@ -40,8 +41,38 @@ function hashedUserData(billing: Record<string, string>): Record<string, string>
 // কারণ test_event_code থাকলে ইভেন্ট আসল রিপোর্ট আর এড অপটিমাইজেশনে যায় না।
 const TEST_EVENT_CODE = process.env.VERCEL_ENV === "production" ? undefined : process.env.FB_TEST_EVENT_CODE || undefined;
 
+// অর্ডারের প্রতিটা প্রোডাক্ট: আইডি, পরিমাণ, একটার দাম আর নাম (Facebook-এর contents-এর জন্য)
+type PurchaseLine = { id: string; quantity: number; item_price?: number; name?: string };
+
+// WooCommerce-এ তৈরি হওয়া অর্ডার থেকে আসল দাম আর নাম নেওয়া হয় (ব্রাউজারের দাম বিশ্বাস করা হয় না)।
+// অর্ডার পড়া না গেলে কার্টের আইডি/পরিমাণ দিয়ে চালিয়ে নেওয়া হয়, ফ্রি গিফটের দাম সহ।
+async function purchaseLines(
+  orderId: number, orderKey: string,
+  items: { product_id: number; quantity: number; gift_price?: number }[],
+): Promise<{ lines: PurchaseLine[]; total?: number }> {
+  const order = orderKey ? await getOrder(orderId, orderKey) : null;
+  if (order?.line_items?.length) {
+    return {
+      lines: order.line_items.map((l) => ({
+        id: String(l.product_id),
+        quantity: l.quantity,
+        item_price: l.quantity > 0 ? Math.round((Number(l.total) / l.quantity) * 100) / 100 : undefined,
+        name: l.name,
+      })),
+      total: Number(order.total) || undefined,
+    };
+  }
+  return {
+    lines: items.map((i) => ({
+      id: String(i.product_id),
+      quantity: i.quantity,
+      ...(i.gift_price !== undefined ? { item_price: i.gift_price } : {}),
+    })),
+  };
+}
+
 async function fireFacebookCAPIPurchase(
-  orderId: number, total: number, items: { product_id: number; quantity: number; gift_price?: number }[],
+  orderId: number, total: number, lines: PurchaseLine[],
   am: Record<string, string>, siteUrl: string, pixelId: string, accessToken: string,
   extra: { fbc?: string; fbp?: string; user_agent?: string; client_ip?: string; external_id?: string },
 ) {
@@ -64,11 +95,12 @@ async function fireFacebookCAPIPurchase(
         custom_data: {
           value: total,
           currency: "BDT",
-          content_ids: items.map((i) => String(i.product_id)),
+          content_ids: lines.map((l) => l.id),
+          ...(lines.some((l) => l.name) ? { content_name: lines.map((l) => l.name).filter(Boolean).join(", ") } : {}),
           content_type: "product",
           order_id: String(orderId),
-          num_items: items.reduce((n, i) => n + i.quantity, 0),
-          contents: items.map((i) => ({ id: String(i.product_id), quantity: i.quantity, ...(i.gift_price !== undefined ? { item_price: i.gift_price } : {}) })),
+          num_items: lines.reduce((n, l) => n + l.quantity, 0),
+          contents: lines.map((l) => ({ id: l.id, quantity: l.quantity, ...(l.item_price !== undefined ? { item_price: l.item_price } : {}) })),
         },
       }],
       ...(TEST_EVENT_CODE ? { test_event_code: TEST_EVENT_CODE } : {}),
@@ -139,7 +171,9 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
     country: "BD",
   };
 
-  const am = hashedUserData(billing);
+  // ইমেইল শুধু সঠিক ফরম্যাটে থাকলেই Facebook-এ যাবে
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer_email) ? customer_email : "";
+  const am = hashedUserData(billing, validEmail);
 
   if (process.env.ORDER_MODE !== "live") {
     console.log("[checkout demo]", { billing, items });
@@ -234,7 +268,8 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
     let SITE_URL = WP_URL.replace("://wp.", "://www.");
     try { if (page_url) SITE_URL = new URL(page_url).origin; } catch {}
     if (ACCESS_TOKEN) {
-      await fireFacebookCAPIPurchase(data.id, total, items, am, SITE_URL, PIXEL_ID, ACCESS_TOKEN, { fbc, fbp, user_agent, client_ip, external_id });
+      const p = await purchaseLines(data.id, String(data.order_key || ""), items);
+      await fireFacebookCAPIPurchase(data.id, total || p.total || 0, p.lines, am, SITE_URL, PIXEL_ID, ACCESS_TOKEN, { fbc, fbp, user_agent, client_ip, external_id });
     }
 
     return { ok: true, id: data.id, key: data.order_key, am };

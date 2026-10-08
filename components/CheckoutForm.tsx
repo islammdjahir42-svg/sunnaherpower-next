@@ -9,7 +9,7 @@ import { useCart, cartTotal } from "@/lib/cart";
 import { taka } from "@/lib/format";
 import { DISTRICTS, findDistrict, findThana } from "@/lib/bd-geo";
 import { checkPhone, localPhoneDigits } from "@/lib/bn-format";
-import { getCookie, getExternalId, saveUserData } from "@/lib/fb";
+import { getCookie, getExternalId, getFbc, saveUserData } from "@/lib/fb";
 
 export default function CheckoutForm() {
   const { items, setQty, remove, clear } = useCart();
@@ -216,7 +216,7 @@ export default function CheckoutForm() {
     // (পেজ খোলার সময় পিক্সেল লোড না হলে _fbp তখনও তৈরি হয়নি থাকতে পারে)
     const f = e.currentTarget.elements;
     const setVal = (n: string, v: string) => { const el = f.namedItem(n) as HTMLInputElement | null; if (el) el.value = v; };
-    setVal("fbc", getCookie("_fbc"));
+    setVal("fbc", getFbc());
     setVal("fbp", getCookie("_fbp"));
     setVal("external_id", getExternalId());
     setSubmitted(true);
@@ -244,7 +244,7 @@ export default function CheckoutForm() {
       <input type="hidden" name="ss_token" value={ready ? (localStorage.getItem("ss_token") || "") : ""} />
       <input type="hidden" name="first_order_discount" value={firstOrderDiscount} />
       <input type="hidden" name="customer_email" value={emailInput} />
-      <input type="hidden" name="fbc" defaultValue={getCookie('_fbc')} />
+      <input type="hidden" name="fbc" defaultValue={getFbc()} />
       <input type="hidden" name="fbp" defaultValue={getCookie('_fbp')} />
       <input type="hidden" name="external_id" defaultValue="" />
       <input type="hidden" name="user_agent" value={typeof navigator !== 'undefined' ? navigator.userAgent : ''} />

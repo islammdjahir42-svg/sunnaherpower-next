@@ -51,3 +51,37 @@ export function getCookie(name: string): string {
   const m = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
   return m ? decodeURIComponent(m[2]) : "";
 }
+
+// ---------- fbc ব্যাকআপ ----------
+// এড থেকে আসলে লিংকে fbclid থাকে। পিক্সেল সেটা দিয়ে _fbc কুকি বানায়, কিন্তু পিক্সেল ব্লক থাকলে
+// (অ্যাড-ব্লকার, কিছু ব্রাউজার) কুকি তৈরি হয় না। তাই আমরাও Meta-র ফরম্যাটে নিজে রেখে দিই:
+// fb.1.<প্রথম দেখার সময় মিলিসেকেন্ডে>.<fbclid হুবহু>
+const FBC_KEY = "sp_fbc";
+
+export function rememberFbclid() {
+  try {
+    if (typeof window === "undefined") return;
+    const id = new URLSearchParams(window.location.search).get("fbclid");
+    if (!id) return;
+    const s = store();
+    const prev = s?.getItem(FBC_KEY) || "";
+    if (prev.endsWith("." + id)) return; // একই ক্লিক, সময় বদলানো যাবে না
+    s?.setItem(FBC_KEY, `fb.1.${Date.now()}.${id}`);
+  } catch {}
+}
+
+function fbcTime(v: string): number {
+  const t = Number(v.split(".")[2]);
+  return Number.isFinite(t) ? t : 0;
+}
+
+// _fbc কুকি আর আমাদের রাখা মানের মধ্যে যেটা নতুন ক্লিকের, সেটা
+export function getFbc(): string {
+  const cookie = getCookie("_fbc");
+  let saved = "";
+  try { saved = store()?.getItem(FBC_KEY) || ""; } catch {}
+  if (!/^fb\.\d\.\d+\..+/.test(saved)) saved = "";
+  if (!cookie) return saved;
+  if (!saved) return cookie;
+  return fbcTime(saved) > fbcTime(cookie) ? saved : cookie;
+}

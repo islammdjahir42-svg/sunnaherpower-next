@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { PIXEL_ID, matchingData } from "@/lib/fb";
+import { PIXEL_ID, matchingData, rememberFbclid } from "@/lib/fb";
 
 declare global {
   interface Window {
@@ -33,6 +33,7 @@ export default function FacebookPixel() {
   const pathname = usePathname();
 
   useEffect(() => {
+    rememberFbclid(); // এড লিংকের fbclid রেখে দেওয়া (পিক্সেল ব্লক থাকলেও অর্ডারে যাবে)
     loadPixel();
     window.fbq?.("track", "PageView");
   }, [pathname]);

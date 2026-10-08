@@ -85,31 +85,6 @@ async function fireFacebookCAPIPurchase(
   }
 }
 
-
-async function fireServerTrackPurchase(orderId: number, total: number, items: {product_id: number, quantity: number}[], phone: string, client_ip?: string, user_agent?: string) {
-  try {
-    const ST_URL = process.env.SERVERTRACK_URL || 'https://retarget.sunnahersopan.com';
-    const ST_KEY = process.env.SERVERTRACK_KEY || 'PK06BD95PFFTU91ZPGD7TZI6HMFU485JMDGRG67W';
-    await fetch(`${ST_URL}/api/events`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        key: ST_KEY,
-        event: 'Purchase',
-        order_id: String(orderId),
-        value: total,
-        currency: 'BDT',
-        content_ids: items.map(i => String(i.product_id)),
-        content_type: 'product',
-        phone: phone,
-        client_ip_address: client_ip || '',
-        client_user_agent: user_agent || '',
-      }),
-    });
-  } catch (e) {
-    console.error('[ServerTrack Purchase]', e);
-  }
-}
 export async function placeOrder(_: CheckoutState, form: FormData): Promise<CheckoutState> {
   const name = String(form.get("name") || "").trim().replace(/\s+/g, " ");
   const phoneRaw = String(form.get("phone") || "");
@@ -261,9 +236,6 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
     if (ACCESS_TOKEN) {
       await fireFacebookCAPIPurchase(data.id, total, items, am, SITE_URL, PIXEL_ID, ACCESS_TOKEN, { fbc, fbp, user_agent, client_ip, external_id });
     }
-
-    // Server-side ServerTrack Purchase
-    await fireServerTrackPurchase(data.id, total, items, phone, client_ip, user_agent);
 
     return { ok: true, id: data.id, key: data.order_key, am };
   } catch (err) {

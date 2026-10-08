@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import ProgressBar from "@/components/ProgressBar";
 import { getCategories } from "@/lib/woo";
 import FacebookPixel from "@/components/FacebookPixel";
+import AttributionTracker from "@/components/AttributionTracker";
 
 export const metadata: Metadata = {
   icons: { icon: "/favicon.jpeg", apple: "/favicon.jpeg" },
@@ -34,6 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         
       </head>
       <body className="min-h-dvh flex flex-col">
+        <AttributionTracker />
         <FacebookPixel />
         <Suspense><ProgressBar /></Suspense>
         <Header categories={menu} />

@@ -118,6 +118,75 @@ async function fireFacebookCAPIPurchase(
   }
 }
 
+// ---------- কাস্টমার কোথা থেকে এসেছে (WooCommerce Order attribution) ----------
+// ব্রাউজার সাইটে প্রথম ঢোকার সময় উৎস সেভ করে রাখে (lib/attribution.ts), চেকআউটে সেটা এখানে আসে।
+type Attr = {
+  type: "utm" | "organic" | "referral" | "typein"; source: string; medium: string; campaign: string;
+  content: string; term: string; id: string; referrer: string; entry: string; start: string; pages: number; count: number;
+};
+
+function parseAttribution(raw: string): Attr {
+  let a: Record<string, unknown> = {};
+  try { const v = JSON.parse(raw || "{}"); if (v && typeof v === "object") a = v as Record<string, unknown>; } catch {}
+  const s = (k: string, n = 150) => (typeof a[k] === "string" ? (a[k] as string).trim().slice(0, n) : "");
+  const n = (k: string) => { const x = Math.trunc(Number(a[k])); return Number.isFinite(x) && x > 0 ? Math.min(x, 100000) : 0; };
+  const type = (["utm", "organic", "referral", "typein"] as const).find((t) => t === a.type) || "typein";
+  return {
+    type,
+    source: s("source") || (type === "typein" ? "(direct)" : ""),
+    medium: s("medium") || "(none)",
+    campaign: s("campaign"), content: s("content"), term: s("term"), id: s("id"),
+    referrer: s("referrer", 500), entry: s("entry", 500), start: s("start", 40),
+    pages: n("pages"), count: n("count"),
+  };
+}
+
+// ব্রাউজারের user agent থেকে Mobile / Tablet / Desktop
+function deviceType(ua: string): string {
+  if (!ua) return "Unknown";
+  if (/iPad|Tablet|PlayBook|Silk|Kindle|(Android(?!.*Mobile))/i.test(ua)) return "Tablet";
+  if (/Mobi|iPhone|iPod|Android|BlackBerry|Opera Mini|IEMobile|webOS/i.test(ua)) return "Mobile";
+  return "Desktop";
+}
+
+// সেশন শুরুর সময় বাংলাদেশ সময়ে "YYYY-MM-DD HH:mm:ss"
+function dhakaTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Date(d.getTime() + 6 * 3600 * 1000).toISOString().replace("T", " ").slice(0, 19);
+}
+
+function attributionMeta(a: Attr, ua: string): Record<string, string> {
+  const label =
+    a.type === "utm" ? `${a.source} / ${a.medium}` :
+    a.type === "organic" ? `Organic: ${a.source}` :
+    a.type === "referral" ? `Referral: ${a.source}` : "Direct";
+  const m: Record<string, string> = {
+    // আগের কাস্টম ফিল্ডগুলো (অন্য কোথাও ব্যবহার হতে পারে), এখন সঠিক মানে
+    utm_source: a.type === "utm" ? a.source : "",
+    utm_medium: a.type === "utm" ? a.medium : "",
+    utm_campaign: a.campaign,
+    referrer: a.referrer,
+    origin: label,
+    // WooCommerce-এর নিজের Order attribution (অর্ডার পেজের "Origin" বক্স আর অর্ডার তালিকার Origin কলাম)
+    _wc_order_attribution_source_type: a.type,
+    _wc_order_attribution_utm_source: a.source,
+    _wc_order_attribution_utm_medium: a.medium,
+    _wc_order_attribution_device_type: deviceType(ua),
+    _wc_order_attribution_user_agent: ua.slice(0, 500),
+  };
+  if (a.campaign) m._wc_order_attribution_utm_campaign = a.campaign;
+  if (a.content) m._wc_order_attribution_utm_content = a.content;
+  if (a.term) m._wc_order_attribution_utm_term = a.term;
+  if (a.id) m._wc_order_attribution_utm_id = a.id;
+  if (a.referrer) m._wc_order_attribution_referrer = a.referrer;
+  if (a.entry) m._wc_order_attribution_session_entry = a.entry;
+  if (a.start) { const t = dhakaTime(a.start); if (t) m._wc_order_attribution_session_start_time = t; }
+  if (a.pages) m._wc_order_attribution_session_pages = String(a.pages);
+  if (a.count) m._wc_order_attribution_session_count = String(a.count);
+  return m;
+}
+
 export async function placeOrder(_: CheckoutState, form: FormData): Promise<CheckoutState> {
   const name = String(form.get("name") || "").trim().replace(/\s+/g, " ");
   const phoneRaw = String(form.get("phone") || "");
@@ -126,10 +195,7 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
   const addressRaw = String(form.get("address") || "").trim();
   const address = addressRaw || [thana?.bn, district?.bn].filter(Boolean).join(", ");
   const note = String(form.get("note") || "").trim();
-  const utm_source = String(form.get("utm_source") || "").trim();
-  const utm_medium = String(form.get("utm_medium") || "").trim();
-  const utm_campaign = String(form.get("utm_campaign") || "").trim();
-  const referrer = String(form.get("referrer") || "").trim();
+  const attribution = parseAttribution(String(form.get("attribution") || ""));
   const fbc = String(form.get("fbc") || "").trim();
   const headersList = await headers();
   const client_ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() || headersList.get('x-real-ip') || '';
@@ -141,7 +207,8 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
   const email_discount = parseFloat(String(form.get("email_discount") || "0"));
   const ss_token = String(form.get("ss_token") || "").trim();
   const first_order_discount = parseFloat(String(form.get("first_order_discount") || "0"));
-  const referrerHost = referrer ? (() => { try { return new URL(referrer).hostname; } catch { return referrer; } })() : "(direct)";
+  // ডিভাইস বোঝার জন্য অনুরোধের নিজের user agent (না থাকলে ফর্মেরটা)
+  const request_ua = headersList.get("user-agent") || user_agent;
 
   let items: { product_id: number; quantity: number; gift_price?: number }[] = [];
   try {
@@ -239,17 +306,7 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
           _customer_name_bn: name,
           _customer_address_bn: address,
           _customer_phone_local: phoneRaw.trim(),
-          utm_source: utm_source,
-          utm_medium: utm_medium,
-          utm_campaign: utm_campaign,
-          referrer: referrer,
-          origin: utm_source ? `${utm_source} / ${utm_medium}` : (referrer ? referrer : "Direct"),
-          _wc_order_attribution_source_type: utm_medium || (referrer ? "referral" : "direct"),
-          _wc_order_attribution_utm_source: utm_source || (referrer ? referrerHost : "(direct)"),
-          _wc_order_attribution_utm_medium: utm_medium || (referrer ? "referral" : "(none)"),
-          _wc_order_attribution_utm_campaign: utm_campaign || "(not set)",
-          _wc_order_attribution_referrer: referrer || "(direct)",
-          _wc_order_attribution_device_type: "Desktop",
+          ...attributionMeta(attribution, request_ua),
         },
       }),
     });

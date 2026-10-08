@@ -10,6 +10,7 @@ import { taka } from "@/lib/format";
 import { DISTRICTS, findDistrict, findThana } from "@/lib/bd-geo";
 import { checkPhone, localPhoneDigits } from "@/lib/bn-format";
 import { getCookie, getExternalId, getFbc, newEventId, saveUserData, sendServerEvent } from "@/lib/fb";
+import { getAttribution } from "@/lib/attribution";
 
 export default function CheckoutForm() {
   const { items, setQty, remove, clear } = useCart();
@@ -33,10 +34,6 @@ export default function CheckoutForm() {
   const audioRef = React.useRef<HTMLAudioElement|null>(null);
   const audioUrlRef = React.useRef<string>("/order-guide.mp3");
   const emailPopupShownRef = React.useRef(false);
-  const [utmSource, setUtmSource] = useState("");
-  const [utmMedium, setUtmMedium] = useState("");
-  const [utmCampaign, setUtmCampaign] = useState("");
-  const [referrer, setReferrer] = useState("");
   const duplicateBannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setReady(true), []);
@@ -81,13 +78,6 @@ export default function CheckoutForm() {
       .catch(() => {});
   }, [ready]);
 
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    setUtmSource(p.get("utm_source") || "");
-    setUtmMedium(p.get("utm_medium") || "");
-    setUtmCampaign(p.get("utm_campaign") || "");
-    setReferrer(document.referrer || "");
-  }, []);
 
   // InitiateCheckout — কার্টের পণ্য, পরিমাণ আর দামসহ
   // কার্ট localStorage থেকে আসে, তাই প্রথম রেন্ডারেই পণ্যগুলো পাওয়া যায়; ইভেন্ট একবারই যাবে।
@@ -225,6 +215,7 @@ export default function CheckoutForm() {
     setVal("fbc", getFbc());
     setVal("fbp", getCookie("_fbp"));
     setVal("external_id", getExternalId());
+    setVal("attribution", JSON.stringify(getAttribution() || {}));
     setSubmitted(true);
   };
 
@@ -255,10 +246,8 @@ export default function CheckoutForm() {
       <input type="hidden" name="external_id" defaultValue="" />
       <input type="hidden" name="user_agent" value={typeof navigator !== 'undefined' ? navigator.userAgent : ''} />
       <input type="hidden" name="page_url" value={typeof window !== 'undefined' ? window.location.href : ''} />
-      <input type="hidden" name="utm_source" value={utmSource} />
-      <input type="hidden" name="utm_medium" value={utmMedium} />
-      <input type="hidden" name="utm_campaign" value={utmCampaign} />
-      <input type="hidden" name="referrer" value={referrer} />
+      {/* কাস্টমার কোথা থেকে এসেছে — সাইটে প্রথম ঢোকার সময় সেভ করা (WooCommerce Origin) */}
+      <input type="hidden" name="attribution" defaultValue="" />
 
       {/* Email Discount Popup */}
       {showEmailPopup && !emailAccepted && (

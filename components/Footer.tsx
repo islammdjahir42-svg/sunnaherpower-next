@@ -64,7 +64,7 @@ export default function Footer() {
 
       {/* Floating call */}
       <a href="tel:+8801908795252" aria-label="কল করুন"
-        className="fixed bottom-4 left-4 z-50 grid h-14 w-14 place-items-center rounded-full bg-[#119a26] text-white shadow-xl ring-2 ring-white md:hidden">
+        className="fixed bottom-4 left-4 z-50 grid h-14 w-14 place-items-center rounded-full bg-[#119a26] text-white shadow-xl ring-2 ring-white ">
         <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden>
           <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1l-2.2 2.23Z" />
         </svg>
@@ -72,7 +72,7 @@ export default function Footer() {
 
       {/* Floating WhatsApp */}
       <a href="https://wa.me/8801908795252" target="_blank" rel="noopener" aria-label="WhatsApp"
-        className="fixed right-4 bottom-4 z-50 grid h-[52px] w-[52px] place-items-center rounded-[14px] bg-gradient-to-b from-[#5ff777] to-[#12b72c] text-white shadow-xl ring-2 ring-white md:hidden">
+        className="fixed right-4 bottom-4 z-50 grid h-[52px] w-[52px] place-items-center rounded-[14px] bg-gradient-to-b from-[#5ff777] to-[#12b72c] text-white shadow-xl ring-2 ring-white ">
         <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor" aria-hidden>
           <path d="M20.5 3.5A11.8 11.8 0 0 0 1.9 17.7L.3 23.5l6-1.6A11.8 11.8 0 0 0 23.8 12a11.7 11.7 0 0 0-3.3-8.5ZM12.1 21.6a9.7 9.7 0 0 1-5-1.4l-.3-.2-3.6.9 1-3.5-.2-.4a9.8 9.8 0 1 1 8.1 4.6Zm5.4-7.3c-.3-.1-1.8-.9-2-1s-.5-.1-.7.1-.8 1-1 1.2-.4.2-.7.1a8 8 0 0 1-4-3.5c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-1-2.3c-.2-.6-.5-.5-.7-.5h-.6a1.1 1.1 0 0 0-.8.4 3.4 3.4 0 0 0-1 2.5 5.9 5.9 0 0 0 1.2 3.1 13.4 13.4 0 0 0 5.2 4.6c1.9.8 2.7.9 3.6.8a3.1 3.1 0 0 0 2-1.4 2.5 2.5 0 0 0 .2-1.4c-.1-.1-.3-.2-.6-.3Z" />
         </svg>

@@ -85,6 +85,31 @@ async function fireFacebookCAPIPurchase(
   }
 }
 
+
+async function fireServerTrackPurchase(orderId: number, total: number, items: {product_id: number, quantity: number}[], phone: string, client_ip?: string, user_agent?: string) {
+  try {
+    const ST_URL = process.env.SERVERTRACK_URL || 'https://retarget.sunnahersopan.com';
+    const ST_KEY = process.env.SERVERTRACK_KEY || 'PK06BD95PFFTU91ZPGD7TZI6HMFU485JMDGRG67W';
+    await fetch(`${ST_URL}/api/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        key: ST_KEY,
+        event: 'Purchase',
+        order_id: String(orderId),
+        value: total,
+        currency: 'BDT',
+        content_ids: items.map(i => String(i.product_id)),
+        content_type: 'product',
+        phone: phone,
+        client_ip_address: client_ip || '',
+        client_user_agent: user_agent || '',
+      }),
+    });
+  } catch (e) {
+    console.error('[ServerTrack Purchase]', e);
+  }
+}
 export async function placeOrder(_: CheckoutState, form: FormData): Promise<CheckoutState> {
   const name = String(form.get("name") || "").trim().replace(/\s+/g, " ");
   const phoneRaw = String(form.get("phone") || "");
@@ -104,6 +129,10 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
   const user_agent = String(form.get("user_agent") || "").trim();
   const page_url = String(form.get("page_url") || "").trim();
   const external_id = String(form.get("external_id") || "").trim().slice(0, 100);
+  const customer_email = String(form.get("customer_email") || "").trim();
+  const email_discount = parseFloat(String(form.get("email_discount") || "0"));
+  const ss_token = String(form.get("ss_token") || "").trim();
+  const first_order_discount = parseFloat(String(form.get("first_order_discount") || "0"));
   const referrerHost = referrer ? (() => { try { return new URL(referrer).hostname; } catch { return referrer; } })() : "(direct)";
 
   let items: { product_id: number; quantity: number; gift_price?: number }[] = [];
@@ -192,6 +221,10 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
         items,
         note,
         phone,
+        customer_email: customer_email || undefined,
+        email_discount: (email_discount > 0 && customer_email) ? email_discount : 0,
+        ss_token: ss_token || undefined,
+        first_order_discount: first_order_discount > 0 ? first_order_discount : 0,
         meta: {
           _customer_name_bn: name,
           _customer_address_bn: address,
@@ -228,6 +261,9 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
     if (ACCESS_TOKEN) {
       await fireFacebookCAPIPurchase(data.id, total, items, am, SITE_URL, PIXEL_ID, ACCESS_TOKEN, { fbc, fbp, user_agent, client_ip, external_id });
     }
+
+    // Server-side ServerTrack Purchase
+    await fireServerTrackPurchase(data.id, total, items, phone, client_ip, user_agent);
 
     return { ok: true, id: data.id, key: data.order_key, am };
   } catch (err) {

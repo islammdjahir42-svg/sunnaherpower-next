@@ -9,7 +9,7 @@ import { useCart, cartTotal } from "@/lib/cart";
 import { taka } from "@/lib/format";
 import { DISTRICTS, findDistrict, findThana } from "@/lib/bd-geo";
 import { checkPhone, localPhoneDigits } from "@/lib/bn-format";
-import { getCookie, getExternalId, getFbc, saveUserData } from "@/lib/fb";
+import { getCookie, getExternalId, getFbc, newEventId, saveUserData, sendServerEvent } from "@/lib/fb";
 
 export default function CheckoutForm() {
   const { items, setQty, remove, clear } = useCart();
@@ -89,31 +89,37 @@ export default function CheckoutForm() {
     setReferrer(document.referrer || "");
   }, []);
 
-  // InitiateCheckout — কার্টের পণ্য, পরিমাণ আর দামসহ (আগে কোনো তথ্য ছাড়া যেত)
+  // InitiateCheckout — কার্টের পণ্য, পরিমাণ আর দামসহ
   // কার্ট localStorage থেকে আসে, তাই প্রথম রেন্ডারেই পণ্যগুলো পাওয়া যায়; ইভেন্ট একবারই যাবে।
+  // ব্রাউজারের পিক্সেল আর সার্ভার (Conversions API) দুই জায়গায় একই event_id।
   const icSent = useRef(false);
   useEffect(() => {
     if (icSent.current || !items.length) return;
     icSent.current = true;
+    const eventId = newEventId('ic');
     const params = {
       value: cartTotal(items),
       currency: 'BDT',
       content_ids: items.map(i => String(i.id)),
+      content_name: items.map(i => i.name).join(', '),
       content_type: 'product',
       contents: items.map(i => ({ id: String(i.id), quantity: i.qty, item_price: i.price })),
       num_items: items.reduce((n, i) => n + i.qty, 0),
     };
+    const opts = { eventID: eventId };
     try {
       if (window.fbq) {
-        window.fbq('track', 'InitiateCheckout', params);
+        window.fbq('track', 'InitiateCheckout', params, opts);
       } else {
         let _a = 0;
         const _iv = setInterval(() => {
           _a++;
-          if (window.fbq || _a > 100) { clearInterval(_iv); window.fbq?.('track', 'InitiateCheckout', params); }
+          if (window.fbq || _a > 100) { clearInterval(_iv); window.fbq?.('track', 'InitiateCheckout', params, opts); }
         }, 50);
       }
     } catch {}
+    // সার্ভারে শুধু আইডি আর পরিমাণ যায়; নাম, দাম, ক্যাটাগরি সার্ভার WooCommerce থেকে নেয়
+    void sendServerEvent('InitiateCheckout', eventId, { items: items.map(i => ({ id: i.id, qty: i.qty })) });
   }, [items]);
 
   useEffect(() => {

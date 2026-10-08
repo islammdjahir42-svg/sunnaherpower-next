@@ -105,7 +105,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export async function sendServerEvent(
   eventName: string,
   eventId: string,
-  data: { product_id: number; quantity?: number },
+  data: { product_id?: number; quantity?: number; items?: { id: number; qty: number }[] },
   opts: { waitForFbp?: boolean } = {},
 ) {
   if (typeof window === "undefined") return;
@@ -120,6 +120,7 @@ export async function sendServerEvent(
       event_source_url: window.location.href,
       product_id: data.product_id,
       quantity: data.quantity,
+      items: data.items,
       fbp: getCookie("_fbp"),
       fbc: getFbc(),
       external_id: getExternalId(),

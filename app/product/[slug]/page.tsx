@@ -33,6 +33,7 @@ export default async function ProductPage({ params }: Props) {
 
   const name = decode(p.name);
   const { price, regular, discount } = priceInfo(p.prices);
+  const category = p.categories?.find((c) => c.slug !== "uncategorized" && c.slug !== "all-products");
   const images = p.images.length ? p.images : await getImagesFromSource(p.slug);
   const desc = cleanDescription(p.description);
 
@@ -44,7 +45,7 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-[1224px] px-4 pb-2" style={{ paddingBottom: "160px" }}>
-      <ViewContentTracker id={p.id} name={name} price={price} />
+      <ViewContentTracker id={p.id} name={name} price={price} category={category ? decode(category.name) : undefined} />
       <p className="mx-auto max-w-3xl py-6 text-center text-[17px] leading-8 sm:py-8 sm:text-lg">
         ৮ দিনের <strong>মানিব্যাক গ্যারান্টি</strong> সাথে থাকছে এক বছরের <strong>রিপ্লেসমেন্ট</strong> ও তিন বছরের সার্ভিস ওয়ারেন্টি
       </p>

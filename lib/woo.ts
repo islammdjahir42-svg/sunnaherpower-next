@@ -96,6 +96,16 @@ export async function getProduct(slug: string) {
   return p;
 }
 
+// আইডি দিয়ে একটা প্রোডাক্ট (সার্ভারের Facebook ইভেন্টে আসল নাম/দাম/ক্যাটাগরি বসানোর জন্য)
+export async function getProductById(id: number): Promise<Product | null> {
+  if (!Number.isInteger(id) || id <= 0) return null;
+  if (USE_FILE) {
+    const list = await readJson<Product[]>("products.json", []);
+    return list.find((p) => p.id === id) ?? null;
+  }
+  return storeGet<Product | null>(`/products/${id}`, null);
+}
+
 export async function getRelatedProducts(productId: number, price?: number): Promise<Product[]> {
   const list = await storeGet<Product[]>(`/products?related=${productId}&per_page=20`, []);
   let filtered = list.filter((p) => p.id !== productId);

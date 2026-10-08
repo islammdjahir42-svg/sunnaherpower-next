@@ -85,3 +85,36 @@ export function getFbc(): string {
   if (!saved) return cookie;
   return fbcTime(saved) > fbcTime(cookie) ? saved : cookie;
 }
+
+// ---------- ব্রাউজার + সার্ভার একই ইভেন্ট ----------
+// একই event_id ব্রাউজারের পিক্সেল আর সার্ভারের Conversions API দুই জায়গায় যায়,
+// তাই Facebook দুটোকে মিলিয়ে একটা ইভেন্ট গোনে, আর সার্ভারেরটা থেকে বাড়তি ম্যাচিং তথ্য পায়।
+export function newEventId(prefix: string): string {
+  const bytes = new Uint8Array(8);
+  try { crypto.getRandomValues(bytes); } catch { for (let i = 0; i < 8; i++) bytes[i] = Math.floor(Math.random() * 256); }
+  const rand = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${prefix}_${Date.now().toString(36)}_${rand}`;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// পিক্সেল লোড হয়ে _fbp কুকি তৈরি হওয়া পর্যন্ত একটু অপেক্ষা (সর্বোচ্চ ~৩ সেকেন্ড),
+// তারপর সার্ভারে পাঠানো। পিক্সেল ব্লক থাকলেও শেষে পাঠানো হয়, তখন fbp ছাড়া।
+export async function sendServerEvent(eventName: string, eventId: string, data: { product_id: number }) {
+  if (typeof window === "undefined") return;
+  try {
+    rememberFbclid();
+    for (let i = 0; i < 12 && !getCookie("_fbp"); i++) await sleep(250);
+    const body = JSON.stringify({
+      event_name: eventName,
+      event_id: eventId,
+      event_source_url: window.location.href,
+      product_id: data.product_id,
+      fbp: getCookie("_fbp"),
+      fbc: getFbc(),
+      external_id: getExternalId(),
+      am: getStoredUserData(),
+    });
+    await fetch("/api/fb-event", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true });
+  } catch {}
+}

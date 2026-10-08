@@ -5,12 +5,10 @@ type Props = {
   orderId: number;
   value: number;
   items: { item_id: string; item_name: string; price: number; quantity: number }[];
-  user: { first_name: string; last_name: string; phone: string; address_1: string; city: string; postcode: string; country: string };
 };
 
 declare global {
   interface Window {
-    dataLayer?: Record<string, unknown>[];
     fbq?: (...args: unknown[]) => void;
     _fbq?: unknown;
     __spPurchaseSent?: Record<string, true>;
@@ -30,7 +28,7 @@ function claimOnce(flag: string): boolean {
   return true;
 }
 
-export default function PurchaseEvent({ orderId, value, items, user }: Props) {
+export default function PurchaseEvent({ orderId, value, items }: Props) {
   useEffect(() => {
     const flag = `purchase_sent_${orderId}`;
     if (!claimOnce(flag)) return;
@@ -50,21 +48,6 @@ export default function PurchaseEvent({ orderId, value, items, user }: Props) {
         contents: items.map(i => ({ id: i.item_id, quantity: i.quantity, item_price: i.price })),
       }, { eventID: `purchase_${orderId}` });
     } catch {}
-
-    // GTM dataLayer
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ ecommerce: null });
-    window.dataLayer.push({
-      event: "purchase",
-      event_id: `purchase_${orderId}`,
-      ecommerce: { transaction_id: String(orderId), value, currency: "BDT", items },
-      user_data: {
-        first_name: user.first_name,
-        last_name: user.last_name,
-        phone_number: user.phone,
-        address: { street: user.address_1, city: user.city, postal_code: user.postcode, country: user.country },
-      },
-    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]); // শুধু অর্ডার নম্বর বদলালে আবার চলবে, অন্য prop-এর নতুন অবজেক্টে না
   return null;

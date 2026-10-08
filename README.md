@@ -25,5 +25,5 @@ npm run dev                  # http://localhost:3000
 
 ## বাকি কাজ
 - Contact / Privacy / Return পেজ (WP Pages API থেকে)
-- GTM + Facebook Pixel (Purchase ইভেন্ট)
+- Facebook Pixel (Purchase ইভেন্ট)
 - লাইভের আগে: WP সাবডোমেইনে সরানো, পুরনো ফ্রন্টএন্ড রিডাইরেক্ট

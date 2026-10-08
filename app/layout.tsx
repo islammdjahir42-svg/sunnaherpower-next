@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import GTM from "@/components/GTM";
 import { Suspense } from "react";
 import ProgressBar from "@/components/ProgressBar";
 import { getCategories } from "@/lib/woo";
@@ -35,7 +34,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         
       </head>
       <body className="min-h-dvh flex flex-col">
-        <GTM />
         <FacebookPixel />
         <Suspense><ProgressBar /></Suspense>
         <Header categories={menu} />

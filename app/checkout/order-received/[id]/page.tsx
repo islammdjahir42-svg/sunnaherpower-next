@@ -43,7 +43,6 @@ export default async function OrderReceived({ params, searchParams }: Props) {
         orderId={order.id}
         value={Number(order.total)}
         items={order.line_items.map((l) => ({ item_id: String(l.product_id), item_name: l.name, price: Number(l.total) / l.quantity, quantity: l.quantity }))}
-        user={order.billing}
       />
       <dl className="grid grid-cols-2 gap-3 rounded-xl bg-[#f6f6f6] p-4 text-sm sm:grid-cols-4">
         <Info k="অর্ডার নম্বর" v={`#${order.id}`} />

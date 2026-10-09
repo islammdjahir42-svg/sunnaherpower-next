@@ -1,6 +1,8 @@
 // Facebook Pixel-এর ছোট সাহায্যকারী ফাংশন (শুধু ব্রাউজারে চলে)
+import { SITE } from "@/lib/site";
 
-export const PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || "2116851162527598";
+// সাইটভেদে আলাদা (lib/site.ts); খালি হলে পিক্সেল চলবে না
+export const PIXEL_ID = SITE.pixelId;
 
 const EID_KEY = "sp_eid"; // প্রতিটা ভিজিটরের স্থায়ী আইডি
 const AM_KEY = "sp_am";   // অর্ডারের পর কাস্টমারের hash করা তথ্য (ফোন, নাম, জেলা...)

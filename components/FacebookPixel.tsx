@@ -34,10 +34,12 @@ export default function FacebookPixel() {
 
   useEffect(() => {
     rememberFbclid(); // এড লিংকের fbclid রেখে দেওয়া (পিক্সেল ব্লক থাকলেও অর্ডারে যাবে)
+    if (!PIXEL_ID) return; // এই সাইটে পিক্সেল সেট করা নেই (Vercel-এ FB_PIXEL_ID দিন)
     loadPixel();
     window.fbq?.("track", "PageView");
   }, [pathname]);
 
+  if (!PIXEL_ID) return null;
   return (
     <noscript>
       <img

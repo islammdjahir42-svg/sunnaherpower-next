@@ -2,8 +2,9 @@ import "server-only";
 import type { Category, Product } from "./types";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { SITE } from "@/lib/site";
 
-const WP_URL = (process.env.WP_URL || "https://wp.sunnahertorch.com").replace(/\/$/, "");
+const WP_URL = (process.env.WP_URL || SITE.wpUrl).replace(/\/$/, "");
 const STORE = `${WP_URL}/wp-json/wc/store/v1`;
 const REST = `${WP_URL}/wp-json/wc/v3`;
 const REVALIDATE = 300; // 5 minutes

@@ -2,8 +2,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { SITE } from "@/lib/site";
 
-const WP = "https://wp.sunnaherpower.com";
+const WP = SITE.wpUrl;
 
 export default function LoginForm() {
   const router = useRouter();

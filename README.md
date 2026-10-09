@@ -1,4 +1,8 @@
-# sunnahersopan.com – Next.js ফ্রন্টএন্ড (Headless WooCommerce)
+# Sunnaher Power / Sunnaher Sopan – Next.js ফ্রন্টএন্ড (Headless WooCommerce)
+
+একই কোড দুই সাইটে চলে। Vercel-এ `WP_URL` দেখে কোড ঠিক করে কোন সাইট (lib/site.ts)।
+- sunnaherpower.com → Vercel প্রজেক্ট `sunnaherpower-next`, `WP_URL=https://wp.sunnaherpower.com`
+- sunnahersopan.com → Vercel প্রজেক্ট `sunnahersopan-next`, `WP_URL=https://wp.sunnahersopan.com`
 
 ## চালানো
 ```bash
@@ -23,7 +27,3 @@ npm run dev                  # http://localhost:3000
 - `ORDER_MODE=live` + `WC_CONSUMER_KEY/SECRET` → আসল অর্ডার (`/wc/v3/orders`, status: processing)
 - দাম ব্রাউজার থেকে নেওয়া হয় না, WooCommerce নিজে হিসাব করে।
 
-## বাকি কাজ
-- Contact / Privacy / Return পেজ (WP Pages API থেকে)
-- Facebook Pixel (Purchase ইভেন্ট)
-- লাইভের আগে: WP সাবডোমেইনে সরানো, পুরনো ফ্রন্টএন্ড রিডাইরেক্ট

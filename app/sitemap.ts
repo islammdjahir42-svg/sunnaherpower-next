@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE } from "@/lib/site";
 import { getCategories, getProducts } from "@/lib/woo";
 import type { Product } from "@/lib/types";
 
@@ -6,11 +7,11 @@ import type { Product } from "@/lib/types";
 // প্রোডাক্ট আর ক্যাটাগরি WooCommerce থেকে আসে, তাই নতুন প্রোডাক্ট দিলে নিজে থেকেই যুক্ত হবে।
 export const revalidate = 3600; // ১ ঘণ্টা পরপর নতুন করে তৈরি হবে
 
-const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://sunnaherpower.com").replace(/\/$/, "");
+const SITE_URL = SITE.url;
 
 // বাংলা বা বিশেষ অক্ষরের slug সঠিকভাবে encode করে পূর্ণ URL বানায়
 function url(path: string) {
-  return new URL(path, SITE + "/").href;
+  return new URL(path, SITE_URL + "/").href;
 }
 
 async function allProducts() {

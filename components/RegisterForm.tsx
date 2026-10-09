@@ -3,8 +3,9 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DISTRICTS, findDistrict, findThana } from "@/lib/bd-geo";
+import { SITE } from "@/lib/site";
 
-const WP = "https://wp.sunnaherpower.com";
+const WP = SITE.wpUrl;
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [firstDiscount, setFirstDiscount] = React.useState("১০০ টাকা");
   React.useEffect(() => {
-    fetch("https://wp.sunnaherpower.com/wp-json/sunnaher/v1/topbar")
+    fetch(`${WP}/wp-json/sunnaher/v1/topbar`)
       .then(r => r.json())
       .then(d => { if (d.amount) setFirstDiscount(d.amount); })
       .catch(() => {});

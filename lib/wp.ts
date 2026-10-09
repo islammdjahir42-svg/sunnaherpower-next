@@ -1,7 +1,8 @@
 import "server-only";
+import { SITE } from "@/lib/site";
 export type WpPage = { id: number; slug: string; title: { rendered: string }; content: { rendered: string } };
 
-const WP_URL = (process.env.WP_URL || "https://sunnahersopan.com").replace(/\/$/, "");
+const WP_URL = (process.env.WP_URL || SITE.wpUrl).replace(/\/$/, "");
 const HEADERS = {
   Accept: "application/json",
   "User-Agent":

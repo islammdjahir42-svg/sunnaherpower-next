@@ -11,6 +11,7 @@ import { DISTRICTS, findDistrict, findThana } from "@/lib/bd-geo";
 import { checkPhone, localPhoneDigits } from "@/lib/bn-format";
 import { getCookie, getExternalId, getFbc, newEventId, saveUserData, sendServerEvent } from "@/lib/fb";
 import { getAttribution } from "@/lib/attribution";
+import { SITE } from "@/lib/site";
 
 export default function CheckoutForm() {
   const { items, setQty, remove, clear } = useCart();
@@ -42,7 +43,7 @@ export default function CheckoutForm() {
     if (!ready) return;
     const token = localStorage.getItem('ss_token');
     if (token) {
-      fetch("https://wp.sunnaherpower.com/wp-json/sunnaher/v1/profile", { headers: { Authorization: "Bearer " + token } })
+      fetch(`${SITE.wpUrl}/wp-json/sunnaher/v1/profile`, { headers: { Authorization: "Bearer " + token } })
  .then(r => r.json()).then(d => {
  if (d.name) setName(d.name);
  if (d.phone) setPhone(d.phone.replace('+880', '0').replace(/[^0-9]/g, ''));
@@ -57,7 +58,7 @@ export default function CheckoutForm() {
     if (!ready) return;
     const foToken = localStorage.getItem('ss_token');
     if (foToken) {
-      fetch("https://wp.sunnaherpower.com/wp-json/sunnaher/v1/first-order-discount", {
+      fetch(`${SITE.wpUrl}/wp-json/sunnaher/v1/first-order-discount`, {
         headers: { Authorization: `Bearer ${foToken}` }
       }).then(r => r.json()).then(d => {
         if (d.eligible && d.amount > 0) setFirstOrderDiscount(d.amount);
@@ -67,7 +68,7 @@ export default function CheckoutForm() {
 
   useEffect(() => {
     if (!ready) return;
-    fetch("https://wp.sunnaherpower.com/wp-json/sunnaher/v1/email-discount")
+    fetch(`${SITE.wpUrl}/wp-json/sunnaher/v1/email-discount`)
       .then(r => r.json())
       .then(d => {
         setEmailOffer(d);
@@ -164,7 +165,7 @@ export default function CheckoutForm() {
     const ph = phoneVal ?? phone;
     if (localPhoneDigits(ph).length < 11) return;
     try {
-      const WP = "https://wp.sunnaherpower.com";
+      const WP = SITE.wpUrl;
       const cartItems = items.map(i => ({ id: i.id, name: i.name, qty: i.qty }));
       const res = await fetch(`${WP}/wp-json/sunnaher/v1/incomplete`, {
         method: "POST",
@@ -185,7 +186,7 @@ export default function CheckoutForm() {
     const id = incompleteIdRef.current;
     if (!id) return;
     try {
-      await fetch(`https://wp.sunnaherpower.com/wp-json/sunnaher/v1/incomplete/${id}`, { method: "DELETE" });
+      await fetch(`${SITE.wpUrl}/wp-json/sunnaher/v1/incomplete/${id}`, { method: "DELETE" });
       incompleteIdRef.current = null;
     } catch {}
   };

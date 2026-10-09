@@ -4,6 +4,7 @@ import { createHash } from "crypto";
 import { getOrder } from "@/lib/woo";
 import { findDistrict, findThana, divisionOf, DISTRICTS } from "@/lib/bd-geo";
 import { capitalize, checkPhone, formatPhone, splitName, toEnglish } from "@/lib/bn-format";
+import { SITE } from "@/lib/site";
 
 export type CheckoutState =
   | { ok: true; id: number; key: string; am?: Record<string, string> }
@@ -248,7 +249,7 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
     return { ok: true, id: 0, key: "demo", am };
   }
 
-  const WP_URL = (process.env.WP_URL || "https://wp.sunnahertorch.com").replace(/\/$/, "");
+  const WP_URL = (process.env.WP_URL || SITE.wpUrl).replace(/\/$/, "");
   const ORDER_KEY = process.env.SUNNAHER_ORDER_KEY || "";
 
   // Gift validation
@@ -320,12 +321,12 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
     // সার্ভার থেকে Facebook Purchase (Conversions API)
     const total = data.total ? Number(data.total) : 0;
     // ব্রাউজারের পিক্সেল যে আইডি ব্যবহার করে, সার্ভারেও সেটাই (আগে ভুল করে অন্য সাইটের পিক্সেল ডিফল্ট ছিল)
-    const PIXEL_ID = process.env.FB_PIXEL_ID || process.env.NEXT_PUBLIC_FB_PIXEL_ID || "2116851162527598";
+    const PIXEL_ID = process.env.FB_PIXEL_ID || SITE.pixelId;
     const ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN || "";
     // কাস্টমার যে ডোমেইন থেকে অর্ডার দিয়েছে সেটাই; না পেলে WP_URL থেকে আন্দাজ
-    let SITE_URL = WP_URL.replace("://wp.", "://www.");
+    let SITE_URL = SITE.url;
     try { if (page_url) SITE_URL = new URL(page_url).origin; } catch {}
-    if (ACCESS_TOKEN) {
+    if (ACCESS_TOKEN && PIXEL_ID) {
       const p = await purchaseLines(data.id, String(data.order_key || ""), items);
       await fireFacebookCAPIPurchase(data.id, total || p.total || 0, p.lines, am, SITE_URL, PIXEL_ID, ACCESS_TOKEN, { fbc, fbp, user_agent, client_ip, external_id });
     }

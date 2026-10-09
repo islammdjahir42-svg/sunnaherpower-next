@@ -11,6 +11,7 @@ import { decode } from "@/lib/format";
 import SearchBox from "./SearchBox";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { SITE } from "@/lib/site";
 
 export const LOGO = "/logo.jpeg";
 const MENU = ["flash-light", "hurricane-light", "lamp-light", "mini-light", "solar-light"];
@@ -23,7 +24,7 @@ export default function Header({ categories }: { categories: Category[] }) {
   const [topbar, setTopbar] = useState<{enabled:boolean;text1:string;amount:string;text2:string}>({ enabled: true, text1: "একাউন্ট খুলুন এবং প্রথম অর্ডারে", amount: "১০০ টাকা", text2: "ছাড় পান!" });
 
   useEffect(() => {
-    fetch("https://wp.sunnaherpower.com/wp-json/sunnaher/v1/topbar")
+    fetch(`${SITE.wpUrl}/wp-json/sunnaher/v1/topbar`)
       .then(r => r.json())
       .then(d => { if (d.text1) setTopbar(d); })
       .catch(() => {});

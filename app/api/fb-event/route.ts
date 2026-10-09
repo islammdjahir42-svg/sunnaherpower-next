@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import { getProductById } from "@/lib/woo";
 import { decode, priceInfo } from "@/lib/format";
+import { SITE } from "@/lib/site";
 
 // ব্রাউজার থেকে আসা ইভেন্ট সার্ভার থেকে Facebook Conversions API-তে পাঠানো হয়।
 // ব্রাউজারের পিক্সেল আর এই সার্ভার ইভেন্টে একই event_id থাকে, তাই Facebook একটাকে ডুপ্লিকেট ধরে বাদ দেয়।
@@ -34,13 +35,13 @@ function sameSiteUrl(raw: string, req: Request): string {
   try {
     const u = new URL(raw);
     const host = new URL(req.url).host;
-    if (u.host === host || u.host.endsWith("sunnaherpower.com")) return u.href;
+    if (u.host === host || u.host === SITE.domain || u.host.endsWith("." + SITE.domain)) return u.href;
   } catch {}
   return req.headers.get("referer") || "";
 }
 
 export async function POST(req: Request) {
-  const PIXEL_ID = process.env.FB_PIXEL_ID || process.env.NEXT_PUBLIC_FB_PIXEL_ID || "2116851162527598";
+  const PIXEL_ID = process.env.FB_PIXEL_ID || SITE.pixelId;
   const ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN || "";
 
   let body: Body;
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
 
   const user_agent = req.headers.get("user-agent") || "";
   // বট বা টোকেন না থাকলে চুপচাপ বাদ
-  if (!ACCESS_TOKEN || !user_agent || BOT_UA.test(user_agent)) return new Response(null, { status: 204 });
+  if (!ACCESS_TOKEN || !PIXEL_ID || !user_agent || BOT_UA.test(user_agent)) return new Response(null, { status: 204 });
 
   const client_ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "";
 

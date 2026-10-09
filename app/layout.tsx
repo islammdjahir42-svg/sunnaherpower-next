@@ -7,10 +7,11 @@ import ProgressBar from "@/components/ProgressBar";
 import { getCategories } from "@/lib/woo";
 import FacebookPixel from "@/components/FacebookPixel";
 import AttributionTracker from "@/components/AttributionTracker";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   icons: { icon: "/favicon.jpeg", apple: "/favicon.jpeg" },
-  title: { default: "sunnaherpower.com", template: "%s – sunnaherpower.com" },
+  title: { default: SITE.domain, template: `%s – ${SITE.domain}` },
   description: "রিচার্জেবল টর্চ, সোলার লাইট, হারিকেন ও লাম্প লাইট। সারা বাংলাদেশে ক্যাশ অন ডেলিভারি।",
 };
 

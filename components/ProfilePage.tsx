@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { SITE } from "@/lib/site";
 import { DISTRICTS, findDistrict, findThana } from "@/lib/bd-geo";
 import Link from "next/link";
 
-const WP = "https://wp.sunnaherpower.com";
+const WP = SITE.wpUrl;
 const taka = (n: number) => "৳ " + n.toLocaleString("bn-BD");
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {

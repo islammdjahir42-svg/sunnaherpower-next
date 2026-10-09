@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LOGO } from "./Header";
+import { SITE } from "@/lib/site";
 
 export default function Footer() {
   const pathname = usePathname();
@@ -22,8 +23,8 @@ export default function Footer() {
                 <a href="tel:01707638902" className="flex items-center gap-2 text-white/90 hover:text-white">
                   📞 <span>01707638902</span>
                 </a>
-                <a href="mailto:Support@sunnaherpower.com" className="flex items-center gap-2 text-white/90 hover:text-white">
-                  ✉️ <span>Support@sunnaherpower.com</span>
+                <a href={`mailto:${SITE.email}`} className="flex items-center gap-2 text-white/90 hover:text-white">
+                  ✉️ <span>{SITE.email}</span>
                 </a>
               </div>
             </div>
@@ -40,7 +41,7 @@ export default function Footer() {
             <div>
               <p className="mb-3 font-bold text-white">আমাদের সাথে যুক্ত থাকুন</p>
               <div className="flex gap-3">
-                <a href="https://www.facebook.com/SunnaherPower/" target="_blank" rel="noopener" aria-label="Facebook"
+                <a href={SITE.facebook} target="_blank" rel="noopener" aria-label="Facebook"
                   className="grid h-10 w-10 place-items-center rounded-full bg-[#1877f2] shadow hover:opacity-90">
                   <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
                     <path fill="white" d="M13.4 19.5v-6h2l.3-2.4h-2.3V9.6c0-.7.2-1.2 1.2-1.2h1.2V6.3a16 16 0 0 0-1.8-.1c-1.8 0-3 1.1-3 3.1v1.8h-2v2.4h2v6h2.4Z" />

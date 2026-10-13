@@ -6,6 +6,7 @@ import ProductGrid from "@/components/ProductGrid";
 import { getProduct, getRelatedProducts } from "@/lib/woo";
 import { getImagesFromSource } from "@/lib/img";
 import { cleanDescription } from "@/lib/clean";
+import { sanitizeShortHtml } from "@/lib/sanitize";
 import { decode, priceInfo, taka } from "@/lib/format";
 import type { Product } from "@/lib/types";
 import StickyBar from "@/components/StickyBar";
@@ -36,6 +37,8 @@ export default async function ProductPage({ params }: Props) {
   const category = p.categories?.find((c) => c.slug !== "uncategorized" && c.slug !== "all-products");
   const images = p.images.length ? p.images : await getImagesFromSource(p.slug);
   const desc = cleanDescription(p.description);
+  // "অর্ডার করুন" বাটনের উপরের লেখা (নিরাপদ HTML; ফাঁকা হলে "")
+  const shortHtml = sanitizeShortHtml(p.short_description);
 
   const relatedFromDesc = (await Promise.all(desc.related.slice(0, 4).map((s) => getProduct(s)))).filter(
     (r): r is Product => !!r && r.id !== p.id
@@ -46,11 +49,15 @@ export default async function ProductPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-[1224px] px-4 pb-2" style={{ paddingBottom: "160px" }}>
       <ViewContentTracker id={p.id} name={name} price={price} category={category ? decode(category.name) : undefined} />
-      <p className="mx-auto max-w-3xl py-6 text-center text-[17px] leading-8 sm:py-8 sm:text-lg">
-        ৮ দিনের <strong>মানিব্যাক গ্যারান্টি</strong> সাথে থাকছে এক বছরের <strong>রিপ্লেসমেন্ট</strong> ও তিন বছরের সার্ভিস ওয়ারেন্টি
-      </p>
+      {/* WooCommerce-এর Short description; ফাঁকা থাকলে এই অংশ একদম দেখায় না */}
+      {shortHtml && (
+        <div
+          className="mx-auto max-w-3xl py-6 text-center text-[17px] leading-8 sm:py-8 sm:text-lg [&_p]:m-0 [&_p+p]:mt-2 [&_ul]:inline-block [&_ul]:text-left [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:inline-block [&_ol]:text-left [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:underline"
+          dangerouslySetInnerHTML={{ __html: shortHtml }}
+        />
+      )}
 
-      <div className="flex justify-center mt-2 mb-6">
+      <div className={`flex justify-center mb-6 ${shortHtml ? "mt-2" : "mt-6 sm:mt-8"}`}>
         <OrderRow
           product={{ id: p.id, slug: p.slug, name, image: images[0]?.thumbnail, price }}
           disabled={!p.is_in_stock || !p.is_purchasable}

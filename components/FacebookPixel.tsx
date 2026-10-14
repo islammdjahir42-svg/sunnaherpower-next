@@ -40,7 +40,10 @@ export default function FacebookPixel() {
     // ad-blocker বা ITP-এ pixel ব্লক হলেও সার্ভার থেকে ইভেন্ট Meta-তে পৌঁছাবে।
     const eventId = newEventId("pv");
     try { window.fbq?.("track", "PageView", {}, { eventID: eventId }); } catch {}
-    void sendServerEvent("PageView", eventId, {});
+    // _fbp cookie-র জন্য অপেক্ষা না করে সাথে সাথে পাঠানো — PageView-এ এটা জরুরি, কারণ
+    // ad-blocker বা ISP-এর কারণে fbevents.js লোড না হলে _fbp কখনোই আসবে না; অপেক্ষা মানে ৩ সেকেন্ড stall।
+    // external_id + fbc + IP + UA দিয়েই Meta ম্যাচ করতে পারবে।
+    void sendServerEvent("PageView", eventId, {}, { waitForFbp: false });
   }, [pathname]);
 
   if (!PIXEL_ID) return null;

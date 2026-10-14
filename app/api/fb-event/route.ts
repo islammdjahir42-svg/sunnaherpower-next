@@ -7,7 +7,7 @@ import { SITE } from "@/lib/site";
 // ব্রাউজারের পিক্সেল আর এই সার্ভার ইভেন্টে একই event_id থাকে, তাই Facebook একটাকে ডুপ্লিকেট ধরে বাদ দেয়।
 // প্রোডাক্টের নাম, দাম, ক্যাটাগরি ব্রাউজার থেকে বিশ্বাস করা হয় না, WooCommerce থেকে নতুন করে নেওয়া হয়।
 
-const ALLOWED_EVENTS = new Set(["ViewContent", "AddToCart", "InitiateCheckout"]);
+const ALLOWED_EVENTS = new Set(["PageView", "ViewContent", "AddToCart", "InitiateCheckout"]);
 const HASH_KEYS = new Set(["em", "ph", "fn", "ln", "ct", "st", "zp", "country"]);
 const HEX64 = /^[0-9a-f]{64}$/;
 const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|meta-externalagent|headless|lighthouse|preview|python|curl|wget/i;
@@ -73,6 +73,37 @@ export async function POST(req: Request) {
     for (const [k, v] of Object.entries(body.am as Record<string, unknown>)) {
       if (HASH_KEYS.has(k) && typeof v === "string" && HEX64.test(v)) user_data[k] = [v];
     }
+  }
+
+  // ---------- PageView: প্রোডাক্ট/কাস্টম ডাটা দরকার নেই ----------
+  // ad-blocker বা ITP-এর কারণে ব্রাউজার pixel ব্লক হলেও এই ইভেন্ট সার্ভার থেকে Meta-তে যাবে।
+  // একই event_id ব্রাউজার pixel-এও যায়, তাই Meta ডুপ্লিকেট বাদ দেয়।
+  if (event_name === "PageView") {
+    const payload = {
+      data: [{
+        event_name,
+        event_time: Math.floor(Date.now() / 1000),
+        event_id,
+        event_source_url: sameSiteUrl(str(body.event_source_url, 2000), req),
+        action_source: "website",
+        user_data,
+      }],
+      ...(TEST_EVENT_CODE ? { test_event_code: TEST_EVENT_CODE } : {}),
+    };
+    after(async () => {
+      try {
+        const res = await fetch(`https://graph.facebook.com/v23.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          cache: "no-store",
+        });
+        if (!res.ok) console.error(`[Facebook CAPI PageView]`, res.status, await res.text());
+      } catch (e) {
+        console.error(`[Facebook CAPI PageView]`, e);
+      }
+    });
+    return new Response(null, { status: 202 });
   }
 
   // ---------- প্রোডাক্টের তথ্য (WooCommerce থেকে) ----------

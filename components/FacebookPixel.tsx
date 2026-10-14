@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { PIXEL_ID, matchingData, rememberFbclid } from "@/lib/fb";
+import { PIXEL_ID, matchingData, newEventId, rememberFbclid, sendServerEvent } from "@/lib/fb";
 
 declare global {
   interface Window {
@@ -36,7 +36,11 @@ export default function FacebookPixel() {
     rememberFbclid(); // এড লিংকের fbclid রেখে দেওয়া (পিক্সেল ব্লক থাকলেও অর্ডারে যাবে)
     if (!PIXEL_ID) return; // এই সাইটে পিক্সেল সেট করা নেই (Vercel-এ FB_PIXEL_ID দিন)
     loadPixel();
-    window.fbq?.("track", "PageView");
+    // ব্রাউজার pixel আর সার্ভার (Conversions API) দুই জায়গায় একই event_id।
+    // ad-blocker বা ITP-এ pixel ব্লক হলেও সার্ভার থেকে ইভেন্ট Meta-তে পৌঁছাবে।
+    const eventId = newEventId("pv");
+    try { window.fbq?.("track", "PageView", {}, { eventID: eventId }); } catch {}
+    void sendServerEvent("PageView", eventId, {});
   }, [pathname]);
 
   if (!PIXEL_ID) return null;

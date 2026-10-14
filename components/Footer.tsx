@@ -35,6 +35,7 @@ export default function Footer() {
                 <li><Link href="/contact-us" className="text-white/80 hover:text-white">📞 Contact Us</Link></li>
                 <li><Link href="/privacy-policy" className="text-white/80 hover:text-white">🔒 Privacy Policy</Link></li>
                 <li><Link href="/return-replacement-policy" className="text-white/80 hover:text-white">🔄 Return & Replacement Policy</Link></li>
+                <li><Link href="/terms-conditions" className="text-white/80 hover:text-white">📜 Terms & Conditions</Link></li>
               </ul>
             </div>
 

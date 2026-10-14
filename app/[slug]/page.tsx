@@ -6,7 +6,7 @@ import { decode } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 // Only these WordPress pages are served; everything else is 404
-const ALLOWED = ["contact-us", "privacy-policy", "return-replacement-policy"];
+const ALLOWED = ["contact-us", "privacy-policy", "return-replacement-policy", "terms-conditions"];
 
 type Props = { params: Promise<{ slug: string }> };
 

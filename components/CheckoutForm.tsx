@@ -9,7 +9,7 @@ import { useCart, cartTotal } from "@/lib/cart";
 import { taka } from "@/lib/format";
 import { DISTRICTS, findDistrict, findThana } from "@/lib/bd-geo";
 import { checkPhone, localPhoneDigits } from "@/lib/bn-format";
-import { getCookie, getExternalId, getFbc, newEventId, saveUserData, sendServerEvent } from "@/lib/fb";
+import { getCookie, getExternalId, getFbc, newEventId, refCode, saveUserData, sendServerEvent } from "@/lib/fb";
 import { getAttribution } from "@/lib/attribution";
 import { SITE } from "@/lib/site";
 
@@ -175,6 +175,11 @@ export default function CheckoutForm() {
           name: nameVal ?? (document.querySelector('input[name="name"]') as HTMLInputElement)?.value ?? "",
           address: addrVal ?? address,
           items: cartItems,
+          // Facebook-এর জন্য: পরে এই অসম্পূর্ণ অর্ডার থেকে অর্ডার বানালে Purchase এই অ্যাড ক্লিকের সাথে মিলবে
+          ref_code: (() => { try { return refCode(); } catch { return ""; } })(),
+          external_id: (() => { try { return getExternalId(); } catch { return ""; } })(),
+          fbc: getFbc(),
+          fbp: getCookie("_fbp"),
         }),
       });
       const data = await res.json();

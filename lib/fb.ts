@@ -25,6 +25,20 @@ export function getExternalId(): string {
   return id;
 }
 
+// কল/WhatsApp অর্ডারের কোড: সাইটের অক্ষর + ভিজিটরের স্থায়ী আইডির প্রথম ৬ অক্ষর, যেমন T-8F3K2Q
+// P = Power, S = Sopan, T = Torch। একই ভিজিটরের কোড সব পেজে, সব প্রোডাক্টে একই থাকে।
+export function siteLetter(): string {
+  const d = SITE.domain.toLowerCase();
+  if (d.includes("power")) return "P";
+  if (d.includes("sopan")) return "S";
+  if (d.includes("torch")) return "T";
+  return (d.replace(/[^a-z]/g, "").charAt(0) || "X").toUpperCase();
+}
+
+export function refCode(): string {
+  return `${siteLetter()}-${getExternalId().slice(0, 6).toUpperCase()}`;
+}
+
 export function getStoredUserData(): Record<string, string> {
   try {
     const raw = store()?.getItem(AM_KEY);
@@ -130,7 +144,7 @@ function waitForFbpCookie(maxMs: number): Promise<void> {
 export async function sendServerEvent(
   eventName: string,
   eventId: string,
-  data: { product_id?: number; quantity?: number; items?: { id: number; qty: number }[] },
+  data: { product_id?: number; quantity?: number; items?: { id: number; qty: number }[]; contact_method?: string; ref_code?: string },
   opts: { waitForFbp?: boolean; fbpWaitMs?: number } = {},
 ) {
   if (typeof window === "undefined") return;
@@ -146,6 +160,8 @@ export async function sendServerEvent(
       product_id: data.product_id,
       quantity: data.quantity,
       items: data.items,
+      contact_method: data.contact_method,
+      ref_code: data.ref_code,
       fbp: getCookie("_fbp"),
       fbc: getFbc(),
       external_id: getExternalId(),

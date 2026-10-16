@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import ProgressBar from "@/components/ProgressBar";
 import { getCategories } from "@/lib/woo";
 import FacebookPixel from "@/components/FacebookPixel";
+import ContactTracker from "@/components/ContactTracker";
 import AttributionTracker from "@/components/AttributionTracker";
 import { SITE } from "@/lib/site";
 
@@ -38,6 +39,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-dvh flex flex-col">
         <AttributionTracker />
         <FacebookPixel />
+        <ContactTracker />
         <Suspense><ProgressBar /></Suspense>
         <Header categories={menu} />
         <main className="flex-1">{children}</main>

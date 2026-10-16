@@ -7,7 +7,7 @@ import { SITE } from "@/lib/site";
 // ব্রাউজারের পিক্সেল আর এই সার্ভার ইভেন্টে একই event_id থাকে, তাই Facebook একটাকে ডুপ্লিকেট ধরে বাদ দেয়।
 // প্রোডাক্টের নাম, দাম, ক্যাটাগরি ব্রাউজার থেকে বিশ্বাস করা হয় না, WooCommerce থেকে নতুন করে নেওয়া হয়।
 
-const ALLOWED_EVENTS = new Set(["PageView", "ViewContent", "AddToCart", "InitiateCheckout"]);
+const ALLOWED_EVENTS = new Set(["PageView", "Contact", "ViewContent", "AddToCart", "InitiateCheckout"]);
 const HASH_KEYS = new Set(["em", "ph", "fn", "ln", "ct", "st", "zp", "country"]);
 const HEX64 = /^[0-9a-f]{64}$/;
 const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|meta-externalagent|headless|lighthouse|preview|python|curl|wget/i;
@@ -26,6 +26,8 @@ type Body = {
   fbc?: unknown;
   external_id?: unknown;
   am?: unknown;
+  contact_method?: unknown;
+  ref_code?: unknown;
 };
 
 const str = (v: unknown, max = 500) => (typeof v === "string" ? v.trim().slice(0, max) : "");
@@ -78,6 +80,63 @@ export async function POST(req: Request) {
     for (const [k, v] of Object.entries(body.am as Record<string, unknown>)) {
       if (HASH_KEYS.has(k) && typeof v === "string" && HEX64.test(v)) user_data[k] = [v];
     }
+  }
+
+  // ---------- Contact: কল বা WhatsApp বাটনে ক্লিক ----------
+  // কোড (যেমন T-8F3K2Q) WhatsApp মেসেজে যায়; পরে অর্ডার তোলার সময় এই কোড দিয়ে Purchase মেলানো যাবে।
+  if (event_name === "Contact") {
+    const method = str(body.contact_method, 20);
+    const ref_code = str(body.ref_code, 20).toUpperCase();
+    const contact_method = method === "call" || method === "whatsapp" ? method : "other";
+    const event_source_url = sameSiteUrl(str(body.event_source_url, 2000), req);
+    const event_time = Math.floor(Date.now() / 1000);
+    const validCode = /^[A-Z]-[0-9A-F]{6}$/.test(ref_code) ? ref_code : "";
+    const payload = {
+      data: [{
+        event_name,
+        event_time,
+        event_id,
+        event_source_url,
+        action_source: "website",
+        user_data,
+        custom_data: { contact_method, ...(validCode ? { ref_code: validCode } : {}) },
+      }],
+      ...(TEST_EVENT_CODE ? { test_event_code: TEST_EVENT_CODE } : {}),
+    };
+    // কোড আর অ্যাড ক্লিকের তথ্য WordPress-এ রাখা — WordPress প্লাগিন আর Vercel-এ REF_STORE_SECRET
+    // বসানোর পরেই চালু হবে; তার আগে কিছুই পাঠায় না।
+    const REF_SECRET = process.env.REF_STORE_SECRET || "";
+    after(async () => {
+      try {
+        const res = await fetch(`https://graph.facebook.com/v23.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          cache: "no-store",
+        });
+        if (!res.ok) console.error(`[Facebook CAPI Contact]`, res.status, await res.text());
+      } catch (e) {
+        console.error(`[Facebook CAPI Contact]`, e);
+      }
+      if (REF_SECRET && validCode) {
+        try {
+          await fetch(`${SITE.wpUrl}/wp-json/sunnaher/v1/ref-code`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Sunnaher-Secret": REF_SECRET },
+            body: JSON.stringify({
+              code: validCode, contact_method, event_time, event_source_url,
+              external_id: HEX64.test(external_id) ? external_id : "",
+              fbc: user_data.fbc || "", fbp: user_data.fbp || "",
+              client_ip_address: client_ip, client_user_agent: user_agent,
+            }),
+            cache: "no-store",
+          });
+        } catch (e) {
+          console.error("[ref-code store]", e);
+        }
+      }
+    });
+    return new Response(null, { status: 202 });
   }
 
   // ---------- PageView: প্রোডাক্ট/কাস্টম ডাটা দরকার নেই ----------

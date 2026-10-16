@@ -25,5 +25,10 @@ export default function ViewContentTracker({ id, name, price, category }: Props)
     } catch {}
     void sendServerEvent('ViewContent', eventId, { product_id: id });
   }, [id, name, price, category]);
+  // WhatsApp-এর আগে থেকে লেখা মেসেজে এই প্রোডাক্টের নাম যাবে (ContactTracker)
+  useEffect(() => {
+    window.__spProduct = name;
+    return () => { if (window.__spProduct === name) window.__spProduct = undefined; };
+  }, [name]);
   return null;
 }

@@ -31,13 +31,18 @@ type Body = {
 const str = (v: unknown, max = 500) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const clampQty = (v: unknown) => Math.max(1, Math.min(50, Math.trunc(Number(v)) || 1));
 
+// event_source_url কখনো খালি যাবে না: ব্রাউজারের URL → Referer (দুটোই শুধু নিজের সাইটের হলে) → সাইটের মূল ঠিকানা
 function sameSiteUrl(raw: string, req: Request): string {
-  try {
-    const u = new URL(raw);
-    const host = new URL(req.url).host;
-    if (u.host === host || u.host === SITE.domain || u.host.endsWith("." + SITE.domain)) return u.href;
-  } catch {}
-  return req.headers.get("referer") || "";
+  let host = "";
+  try { host = new URL(req.url).host; } catch {}
+  const own = (v: string | null): string | null => {
+    try {
+      const u = new URL(v || "");
+      if (u.host === host || u.host === SITE.domain || u.host.endsWith("." + SITE.domain)) return u.href;
+    } catch {}
+    return null;
+  };
+  return own(raw) || own(req.headers.get("referer")) || `${SITE.url}/`;
 }
 
 export async function POST(req: Request) {

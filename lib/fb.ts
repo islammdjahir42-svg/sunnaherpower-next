@@ -98,9 +98,32 @@ export function newEventId(prefix: string): string {
   return `${prefix}_${Date.now().toString(36)}_${rand}`;
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+// _fbp কুকি তৈরি হওয়া পর্যন্ত অপেক্ষা: কুকি এলে, সময় শেষ হলে, বা ভিজিটর পেজ ছেড়ে গেলে
+// (pagehide / ট্যাব লুকানো) — যেটা আগে হয়। পেজ ছাড়ার মুহূর্তে পাঠালে keepalive অনুরোধটা পৌঁছে যায়।
+function waitForFbpCookie(maxMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    if (getCookie("_fbp")) return resolve();
+    let done = false;
+    let iv: ReturnType<typeof setInterval> | undefined;
+    let to: ReturnType<typeof setTimeout> | undefined;
+    const onVis = () => { if (document.visibilityState === "hidden") finish(); };
+    function finish() {
+      if (done) return;
+      done = true;
+      if (iv) clearInterval(iv);
+      if (to) clearTimeout(to);
+      window.removeEventListener("pagehide", finish);
+      document.removeEventListener("visibilitychange", onVis);
+      resolve();
+    }
+    window.addEventListener("pagehide", finish);
+    document.addEventListener("visibilitychange", onVis);
+    iv = setInterval(() => { if (getCookie("_fbp")) finish(); }, 100);
+    to = setTimeout(finish, maxMs);
+  });
+}
 
-// পিক্সেল লোড হয়ে _fbp কুকি তৈরি হওয়া পর্যন্ত একটু অপেক্ষা (সর্বোচ্চ ~৩ সেকেন্ড),
+// পিক্সেল লোড হয়ে _fbp কুকি তৈরি হওয়া পর্যন্ত একটু অপেক্ষা (ডিফল্ট সর্বোচ্চ ৩ সেকেন্ড, fbpWaitMs দিয়ে বদলানো যায়),
 // তারপর সার্ভারে পাঠানো। পিক্সেল ব্লক থাকলেও শেষে পাঠানো হয়, তখন fbp ছাড়া।
 // waitForFbp: false দিলে সাথে সাথে পাঠায় — ক্লিকের পরেই পেজ বদলালে (যেমন "অর্ডার করুন") দরকার,
 // কারণ অপেক্ষার মধ্যে পেজ চলে গেলে অনুরোধটাই আর যায় না। keepalive থাকায় শুরু হওয়া অনুরোধ পেজ বদলালেও শেষ হয়।
@@ -108,13 +131,13 @@ export async function sendServerEvent(
   eventName: string,
   eventId: string,
   data: { product_id?: number; quantity?: number; items?: { id: number; qty: number }[] },
-  opts: { waitForFbp?: boolean } = {},
+  opts: { waitForFbp?: boolean; fbpWaitMs?: number } = {},
 ) {
   if (typeof window === "undefined") return;
   try {
     rememberFbclid();
     if (opts.waitForFbp !== false) {
-      for (let i = 0; i < 12 && !getCookie("_fbp"); i++) await sleep(250);
+      await waitForFbpCookie(opts.fbpWaitMs ?? 3000);
     }
     const body = JSON.stringify({
       event_name: eventName,

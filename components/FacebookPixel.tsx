@@ -40,10 +40,10 @@ export default function FacebookPixel() {
     // ad-blocker বা ITP-এ pixel ব্লক হলেও সার্ভার থেকে ইভেন্ট Meta-তে পৌঁছাবে।
     const eventId = newEventId("pv");
     try { window.fbq?.("track", "PageView", {}, { eventID: eventId }); } catch {}
-    // _fbp cookie-র জন্য অপেক্ষা না করে সাথে সাথে পাঠানো — PageView-এ এটা জরুরি, কারণ
-    // ad-blocker বা ISP-এর কারণে fbevents.js লোড না হলে _fbp কখনোই আসবে না; অপেক্ষা মানে ৩ সেকেন্ড stall।
-    // external_id + fbc + IP + UA দিয়েই Meta ম্যাচ করতে পারবে।
-    void sendServerEvent("PageView", eventId, {}, { waitForFbp: false });
+    // _fbp কুকির জন্য সর্বোচ্চ ১.৫ সেকেন্ড অপেক্ষা (প্রথম ভিজিটে পিক্সেল কুকি বানাতে একটু সময় নেয়)।
+    // ad-blocker থাকলে কুকি আসবে না — তখন অপেক্ষার পর fbp ছাড়াই যায়; ভিজিটর এর মধ্যে
+    // পেজ ছাড়লে সাথে সাথে পাঠানো হয়, তাই ইভেন্ট হারায় না।
+    void sendServerEvent("PageView", eventId, {}, { fbpWaitMs: 1500 });
   }, [pathname]);
 
   if (!PIXEL_ID) return null;

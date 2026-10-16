@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { PIXEL_ID, matchingData } from "@/lib/fb";
 
 type Props = {
   orderId: number;
@@ -36,6 +37,11 @@ export default function PurchaseEvent({ orderId, value, items }: Props) {
     // Facebook Pixel Purchase
     // কাস্টমারের তথ্য (ফোন, নাম, জেলা) পিক্সেল init-এই চলে গেছে (অর্ডারের সময় সেভ করা hash থেকে)।
     // eventID সার্ভারের CAPI Purchase-এর সাথে হুবহু এক, তাই Facebook একটাকে ডুপ্লিকেট হিসেবে বাদ দেবে।
+    // Purchase-এর ঠিক আগে পিক্সেলকে আবার init করে সর্বশেষ hash (ফোন, নাম, জেলা...) দেওয়া,
+    // যাতে পেজ লোডের সময় localStorage-এ তথ্য না থাকলেও Purchase-এ সর্বশেষ Advanced Matching যায়।
+    try {
+      if (PIXEL_ID) window.fbq?.('init', PIXEL_ID, matchingData());
+    } catch {}
     try {
       window.fbq?.('track', 'Purchase', {
         value,

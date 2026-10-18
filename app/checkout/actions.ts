@@ -188,6 +188,19 @@ function attributionMeta(a: Attr, ua: string): Record<string, string> {
   return m;
 }
 
+// অর্ডারের সাথে WordPress-এ রাখা Facebook-এর তথ্য (Sunnaher FB Orders প্লাগিন পড়ে)।
+// পরে অর্ডার Completed হলে প্লাগিন এগুলো দিয়ে "Delivered" ইভেন্ট পাঠায় — তাতে ওয়েবসাইটের Purchase-এর মতোই ভালো মেলে।
+// শুধু সঠিক ফরম্যাটের মান রাখা হয়, ভুল বা খালি হলে ঘরটাই বাদ।
+function fbOrderMeta(v: { external_id: string; fbc: string; fbp: string; client_ip: string; user_agent: string }): Record<string, string> {
+  const m: Record<string, string> = {};
+  if (/^[0-9a-f]{64}$/.test(v.external_id)) m._sfo_external_id = v.external_id;
+  if (v.fbc.length <= 500 && /^fb\.\d\.\d+\.\S+$/.test(v.fbc)) m._sfo_fbc = v.fbc;
+  if (/^fb\.\d\.\d+\.\d+$/.test(v.fbp)) m._sfo_fbp = v.fbp;
+  if (/^[0-9a-fA-F:.]{3,45}$/.test(v.client_ip)) m._sfo_ip = v.client_ip;
+  if (v.user_agent) m._sfo_ua = v.user_agent.slice(0, 500);
+  return m;
+}
+
 export async function placeOrder(_: CheckoutState, form: FormData): Promise<CheckoutState> {
   const name = String(form.get("name") || "").trim().replace(/\s+/g, " ");
   const phoneRaw = String(form.get("phone") || "");
@@ -308,6 +321,7 @@ export async function placeOrder(_: CheckoutState, form: FormData): Promise<Chec
           _customer_address_bn: address,
           _customer_phone_local: phoneRaw.trim(),
           ...attributionMeta(attribution, request_ua),
+          ...fbOrderMeta({ external_id, fbc, fbp, client_ip, user_agent: request_ua }),
         },
       }),
     });

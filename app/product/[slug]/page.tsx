@@ -12,6 +12,8 @@ import type { Product } from "@/lib/types";
 import StickyBar from "@/components/StickyBar";
 import DescriptionCleaner from "@/components/DescriptionCleaner";
 import ViewContentTracker from "@/components/ViewContentTracker";
+import GiftOffer from "@/components/GiftOffer";
+import { SITE } from "@/lib/site";
 
 export const revalidate = 300;
 
@@ -49,6 +51,8 @@ export default async function ProductPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-[1224px] px-4 pb-2" style={{ paddingBottom: "160px" }}>
       <ViewContentTracker id={p.id} name={name} price={price} category={category ? decode(category.name) : undefined} />
+      {/* WordPress → Settings → Gift Offers-এ এই প্রোডাক্টের জন্য অফার থাকলে "গিফট নিতে চান?" পপআপ */}
+      <GiftOffer productId={p.id} wpUrl={SITE.wpUrl} />
       {/* WooCommerce-এর Short description; ফাঁকা থাকলে এই অংশ একদম দেখায় না */}
       {shortHtml && (
         <div
